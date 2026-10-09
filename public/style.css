@@ -321,3 +321,65 @@ body,button,input,select{font-family:var(--sans)}
 .cands .section-heading{padding:0 max(5%,calc((100vw - 1150px)/2))}
 .cands-track{padding-left:max(5%,calc((100vw - 1150px)/2))}
 @media(max-width:600px){.howto{padding:50px 20px 30px}.stats{padding:40px 20px}.cands{padding:50px 0}.cands .section-heading{padding:0 20px}}
+
+/* ===== Guía interactiva de los comités ===== */
+.explainer{--tone:#2f7d79;--tone-soft:#e3f1ef;--tone-ink:#1d5552;margin-top:10px}
+.explainer[data-theme=hs]{--tone:#861079;--tone-soft:#f7e8f4;--tone-ink:#5c0f53}
+.ex-tabs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ex-tab{display:grid!important;grid-template-columns:120px 1fr;align-items:center;gap:0;padding:0!important;text-align:left;border-radius:18px!important;border:2px solid var(--line)!important;background:#fff!important;overflow:hidden;opacity:.72;transition:opacity .3s,border-color .3s,box-shadow .3s,transform .3s!important}
+.ex-tab img{width:100%;height:100%;min-height:110px;object-fit:cover;transition:transform .6s}
+.ex-tab>span{padding:18px 20px}
+.ex-tab small{display:block;font-size:10px;letter-spacing:.16em;color:var(--muted);font-weight:700}
+.ex-tab strong{display:block;font-size:18px;line-height:1.25;margin-top:6px;letter-spacing:-.02em}
+.ex-tab:hover{opacity:1}.ex-tab:hover img{transform:scale(1.08)}
+.ex-tab[aria-selected=true]{opacity:1;border-color:var(--tone)!important;box-shadow:0 18px 40px #2a0c2618}
+.ex-tab[aria-selected=true] small{color:var(--tone)}
+.ex-panel{margin-top:26px;padding:clamp(22px,4vw,44px);border-radius:24px;background:#fff;border:1px solid var(--line);box-shadow:0 30px 70px #2a0c260d;transition:border-color .4s}
+.ex-panel:focus{outline:0}
+.ex-kicker{display:block;font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--tone);margin-bottom:10px}
+.ex-intro{display:grid;grid-template-columns:1.4fr 1fr;gap:34px;align-items:start}
+.ex-intro h3{font:italic 400 clamp(26px,3vw,38px)/1.15 var(--serif);margin:0 0 14px;color:var(--plum);letter-spacing:-.02em}
+.ex-intro p{font-size:16px;line-height:1.7;color:#4c414b;margin:0}
+.ex-vote{padding:24px;border-radius:18px;background:var(--tone-soft);transition:background .4s}
+.ex-vote p{font-size:15px!important;color:var(--tone-ink)!important;line-height:1.6}
+.ex-cta{display:inline-flex;gap:10px;margin-top:16px;font-weight:700;color:#fff;background:var(--tone);padding:11px 18px;border-radius:10px;text-decoration:none;transition:transform .2s,box-shadow .2s,background .4s}
+.ex-cta:hover{transform:translateY(-2px);box-shadow:0 10px 24px #2a0c2630}
+.ex-cta span{transition:transform .2s}.ex-cta:hover span{transform:translateX(4px)}
+.ex-block{margin-top:44px}
+.ex-block h4{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;font-size:clamp(20px,2.2vw,26px);font-weight:800;letter-spacing:-.03em;margin:0 0 20px}
+.ex-block h4 small{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+.ex-funcs{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ex-func{position:relative;height:210px;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;perspective:900px;text-align:left;overflow:visible!important;border-radius:16px!important}
+.ex-front,.ex-back{position:absolute;inset:0;display:flex;flex-direction:column;padding:20px;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.ex-front{background:#fff;border:1px solid var(--line)}
+.ex-back{background:var(--tone);color:#fff;transform:rotateY(180deg);font-weight:400;font-size:14px;line-height:1.55;gap:10px}
+.ex-back strong{font-size:15px}
+.ex-func[aria-pressed=true] .ex-front{transform:rotateY(-180deg)}
+.ex-func[aria-pressed=true] .ex-back{transform:rotateY(0)}
+.ex-func:hover .ex-front{border-color:var(--tone);box-shadow:0 14px 30px #2a0c2614}
+.ex-front svg{width:38px;height:38px;fill:none;stroke:var(--tone);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:auto}
+.ex-front small{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.1em}
+.ex-front strong{font-size:17px;line-height:1.25;margin:4px 0 10px;letter-spacing:-.01em}
+.ex-front em{font-style:normal;font-size:12px;font-weight:700;color:var(--tone)}
+.ex-cases{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.ex-cases li{display:flex;gap:18px;align-items:flex-start;margin:0;padding:18px 20px;border-radius:14px;background:#faf8f9;border-left:4px solid var(--tone);transition:transform .25s,background .25s}
+.ex-cases li:hover{transform:translateX(6px);background:var(--tone-soft)}
+.ex-case-n{display:grid!important;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;background:var(--tone);color:#fff!important;font-weight:800;font-size:14px!important;padding:0!important}
+.ex-cases b{display:block;font-size:15px;color:var(--plum)}
+.ex-cases p{margin:4px 0 0;font-size:14px;color:#5b4f59;line-height:1.55}
+.ex-quiz{display:grid;gap:12px}
+.ex-quiz h4{margin-bottom:8px}
+.ex-q{padding:18px 20px;border-radius:14px;border:1px solid var(--line);background:#fff}
+.ex-q>p:first-child{margin:0 0 12px;font-size:15px;font-weight:600;color:var(--plum)}
+.ex-q-btns{display:flex;gap:10px;flex-wrap:wrap}
+.ex-q-btns button{border-radius:999px;padding:9px 20px}
+.ex-q-btns button.is-right{background:#def3e8;border-color:#2f9e6b;color:#1e7a4d;opacity:1}
+.ex-q-btns button.is-wrong{background:#fbe4e4;border-color:#c94a4a;color:#9b2c2c;opacity:1}
+.ex-q.done button:not(.is-right):not(.is-wrong){opacity:.4}
+.ex-q-fb{margin:12px 0 0;font-size:14px;line-height:1.55;color:#4c414b;animation:rise .4s both}
+.ex-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;align-items:center;margin-top:40px;padding-top:22px;border-top:1px solid var(--line)}
+.ex-foot p{margin:0;font-size:13px;color:#5b4f59;max-width:620px;line-height:1.55}
+.ex-foot a{font-size:12px;font-weight:700;color:var(--tone)}
+@media(max-width:900px){.ex-intro{grid-template-columns:1fr}.ex-funcs{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.ex-tabs{grid-template-columns:1fr}.ex-tab{grid-template-columns:90px 1fr}.ex-tab strong{font-size:16px}.ex-funcs{grid-template-columns:1fr}.ex-func{height:180px}}
+@media(prefers-reduced-motion:reduce){.ex-front,.ex-back{transition:none}}

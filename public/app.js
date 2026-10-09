@@ -284,3 +284,65 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
   if(!still){list.forEach((c,i)=>{const d=card(c,i);d.setAttribute('aria-hidden','true');track.append(d);});track.parentElement.classList.add('cands-mask');}
  },200);
 })();
+
+/* ===== Guía interactiva: ¿qué vas a votar? ===== */
+(()=>{
+ const box=document.getElementById('explainer');if(!box)return;
+ const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const icons={
+  plan:'<path d="M5 3h10l4 4v14H5z"/><path d="M9 12h6M9 16h6M9 8h3"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  search:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/>',
+  people:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5"/>',
+  scale:'<path d="M12 3v18M5 21h14M6 7h12M6 7l-3 7h6zM18 7l-3 7h6z"/>',
+  doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h4"/>',
+  shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>'
+ };
+ const ico=k=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[k]+'</svg>';
+ const data={
+  sst:{tab:'Seguridad y Salud en el Trabajo',kicker:'PREVENCIÓN Y BIENESTAR',img:'/salud.jpg',
+   lead:'Cuidar el trabajo también es cuidar a las personas.',
+   what:'Es un equipo formado por representantes de la empresa y de los trabajadores, en igual número. Juntos revisan que el trabajo se haga de forma segura, detectan riesgos y proponen mejoras para prevenir accidentes y enfermedades.',
+   vote:'Con tu voto eliges a quien llevará la voz de los trabajadores al comité: alguien que conozca lo que pasa en cada puesto y se anime a proponer cambios.',
+   functions:[['plan','Planificar la prevención','Aprueba y vigila el Reglamento Interno y el Plan Anual de Seguridad y Salud en el Trabajo.'],['eye','Revisar el entorno','Inspecciona las instalaciones y propone mejoras para reducir riesgos.'],['search','Aprender de los incidentes','Investiga las causas de accidentes, incidentes y enfermedades ocupacionales, y recomienda medidas para que no se repitan.'],['people','Promover la participación','Impulsa capacitaciones y la participación de los trabajadores en la prevención.']],
+   cases:[['Un piso mojado o un estante inestable en la botica','El comité puede inspeccionar el lugar y proponer una mejora.'],['Alguien sufre un accidente o un incidente','El comité investiga las causas y recomienda medidas para evitar que se repita.'],['Faltan capacitaciones o equipos de protección','El comité vigila el plan anual y promueve capacitaciones.']],
+   quiz:[['El comité reemplaza la responsabilidad de la empresa en seguridad.',false,'La empresa sigue siendo responsable de garantizar la seguridad y salud. El comité ayuda, propone y vigila.'],['El comité puede investigar las causas de un accidente de trabajo.',true,'Es una de sus funciones: investigar y recomendar medidas para que no se repita.'],['Tu voto elige a quien representará a los trabajadores.',true,'Los trabajadores eligen a sus representantes. La empresa designa a los suyos.']],
+   note:'La responsabilidad de garantizar la seguridad y salud sigue siendo del empleador; no se transfiere al comité.',
+   source:'https://cdn.www.gob.pe/uploads/document/file/6575074/5722542-comite-sst_2024_lelvf-rev-1.pdf',label:'MTPE · Funciones del Comité de SST'},
+  hs:{tab:'Intervención frente al Hostigamiento Sexual',kicker:'DIGNIDAD Y RESPETO',img:'/equipo.jpg',
+   lead:'Un entorno de respeto se construye con participación.',
+   what:'Es el órgano que investiga los casos de hostigamiento sexual laboral y recomienda sanciones u otras medidas. Lo integran representantes de los trabajadores y de la empresa, respetando la paridad de género.',
+   vote:'Con tu voto eliges a quien representará a los trabajadores en las investigaciones: una persona confiable, que actúe con reserva y trate a todos con respeto.',
+   functions:[['search','Investigar los hechos','Investiga los casos que Recursos Humanos, o quien haga sus veces, le comunica.'],['scale','Evaluar la información','Recaba y evalúa los elementos de la investigación, respetando el derecho de defensa.'],['doc','Emitir recomendaciones','Elabora un informe con conclusiones y recomendaciones de sanción o archivo.'],['shield','Evitar nuevos casos','Recomienda medidas adicionales, actúa con confidencialidad y evita la revictimización.']],
+   cases:[['Una persona comunica un caso a Recursos Humanos','Recursos Humanos traslada el caso y el comité inicia la investigación con confidencialidad.'],['Durante la investigación','El comité escucha a las partes y evalúa la información, respetando el derecho de defensa.'],['Al terminar la investigación','El comité emite un informe con recomendaciones. La sanción la decide Recursos Humanos o quien haga sus veces.']],
+   quiz:[['Esta página electoral sirve para presentar denuncias.',false,'No. Este portal solo sirve para votar. Las denuncias se presentan por los canales de la empresa.'],['El comité debe actuar con confidencialidad.',true,'La reserva protege a todas las personas involucradas y evita la revictimización.'],['El comité decide la sanción final.',false,'El comité investiga y recomienda. La decisión la toma Recursos Humanos o quien haga sus veces.']],
+   note:'Esta página electoral no es un canal de denuncias. Si necesitas reportar un caso, usa los canales de la empresa.',
+   source:'https://www.gob.pe/institucion/mtpe/informes-publicaciones/4622972-procedimiento-interno-de-investigacion-sobre-hostigamiento-sexual-laboral-en-el-sector-privado',label:'MTPE · Procedimiento de investigación en el sector privado'}
+ };
+ box.innerHTML='<div class="ex-tabs" role="tablist" aria-label="Comités">'+Object.entries(data).map(([id,d],i)=>'<button role="tab" id="tab-'+id+'" class="ex-tab" data-tab="'+id+'" aria-selected="'+(i===0)+'" aria-controls="ex-panel"><img src="'+d.img+'" alt=""><span><small>0'+(i+1)+' · '+d.kicker+'</small><strong>'+d.tab+'</strong></span></button>').join('')+'</div><div class="ex-panel" id="ex-panel" role="tabpanel" tabindex="-1"></div>';
+ const panel=box.querySelector('.ex-panel');
+ function render(id){
+  const d=data[id];
+  box.dataset.theme=id;
+  box.querySelectorAll('.ex-tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.tab===id)));
+  panel.setAttribute('aria-labelledby','tab-'+id);
+  panel.innerHTML=
+   '<div class="ex-intro"><div><span class="ex-kicker">¿QUÉ ES?</span><h3>'+esc(d.lead)+'</h3><p>'+esc(d.what)+'</p></div><aside class="ex-vote"><span class="ex-kicker">TU VOTO</span><p>'+esc(d.vote)+'</p><a href="#acceso" class="ex-cta">Ir a votar <span aria-hidden="true">→</span></a></aside></div>'+
+   '<div class="ex-block"><span class="ex-kicker">¿QUÉ HACE?</span><h4>Sus funciones <small>Toca una tarjeta para ver el detalle</small></h4><div class="ex-funcs">'+d.functions.map(([ic,t,x],i)=>'<button class="ex-func" aria-pressed="false"><span class="ex-front">'+ico(ic)+'<small>0'+(i+1)+'</small><strong>'+esc(t)+'</strong><em>Ver más +</em></span><span class="ex-back"><strong>'+esc(t)+'</strong><span>'+esc(x)+'</span></span></button>').join('')+'</div></div>'+
+   '<div class="ex-block"><span class="ex-kicker">EN TU DÍA A DÍA</span><h4>¿Cuándo actúa el comité?</h4><ol class="ex-cases">'+d.cases.map(([s,a],i)=>'<li><span class="ex-case-n">'+(i+1)+'</span><div><b>'+esc(s)+'</b><p>'+esc(a)+'</p></div></li>').join('')+'</ol></div>'+
+   '<div class="ex-block ex-quiz"><span class="ex-kicker">PONTE A PRUEBA</span><h4>¿Verdadero o falso? <small class="ex-score" aria-live="polite">0 de '+d.quiz.length+' respondidas</small></h4>'+d.quiz.map(([q],i)=>'<div class="ex-q" data-q="'+i+'"><p>'+esc(q)+'</p><div class="ex-q-btns"><button data-a="true">Verdadero</button><button data-a="false">Falso</button></div><p class="ex-q-fb" hidden></p></div>').join('')+'</div>'+
+   '<div class="ex-foot"><p>'+esc(d.note)+'</p><a href="'+d.source+'" target="_blank" rel="noopener">'+esc(d.label)+' ↗</a></div>';
+  panel.querySelectorAll('.ex-func').forEach(f=>f.onclick=()=>{const on=f.getAttribute('aria-pressed')!=='true';f.setAttribute('aria-pressed',String(on));});
+  let answered=0,right=0;
+  panel.querySelectorAll('.ex-q').forEach(q=>{const [,ok,why]=d.quiz[+q.dataset.q];q.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+   if(q.classList.contains('done'))return;q.classList.add('done');const good=(b.dataset.a==='true')===ok;answered++;if(good)right++;
+   b.classList.add(good?'is-right':'is-wrong');q.querySelectorAll('button').forEach(x=>x.disabled=true);
+   const fb=q.querySelector('.ex-q-fb');fb.hidden=false;fb.textContent=(good?'¡Correcto! ':'No exactamente. ')+'Es '+(ok?'verdadero':'falso')+'. '+why;
+   panel.querySelector('.ex-score').textContent=answered<d.quiz.length?answered+' de '+d.quiz.length+' respondidas':'Acertaste '+right+' de '+d.quiz.length+(right===d.quiz.length?' · ¡Excelente!':'');
+  });});
+  if(!still)panel.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:450,easing:'cubic-bezier(.2,.7,.2,1)'});
+  if(!still){const items=panel.querySelectorAll('.ex-func,.ex-cases li,.ex-q');items.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:500,delay:120+i*60,easing:'ease-out',fill:'backwards'}));}
+ }
+ box.querySelectorAll('.ex-tab').forEach(t=>{t.onclick=()=>render(t.dataset.tab);t.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const tabs=[...box.querySelectorAll('.ex-tab')],n=tabs[(tabs.indexOf(t)+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];n.focus();render(n.dataset.tab);}};});
+ render('sst');
+})();
