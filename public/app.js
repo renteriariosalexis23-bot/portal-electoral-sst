@@ -403,3 +403,25 @@ function addReadingConfirmation(){
 }
 const guidePanel=document.getElementById('ex-panel');
 if(guidePanel){new MutationObserver(addReadingConfirmation).observe(guidePanel,{childList:true});addReadingConfirmation();}
+
+/* ===== Tarjetas de candidatura más visuales ===== */
+(()=>{
+ const svg=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
+ const brief=svg('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 12h18"/>');
+ const pin=svg('<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>');
+ const baseBallot3=ballot;
+ ballot=function(e,previous){
+  baseBallot3(e,previous);
+  document.querySelectorAll('#ballot .candidate').forEach(label=>{
+   const blank=label.classList.contains('blank-option');
+   if(!blank){
+    const av=label.querySelector('.avatar'),tone=av&&av.style.getPropertyValue('--av');if(tone)label.style.setProperty('--av',tone);
+    label.insertAdjacentHTML('afterbegin','<span class="cand-band" aria-hidden="true"></span>');
+    const d=[...label.querySelectorAll('.candidate-detail')];
+    if(d[0]){const t=d[0].textContent;d[0].className='cand-role';d[0].innerHTML=brief+'<span>'+esc(t)+'</span>';}
+    if(d[1]){const t=d[1].textContent;d[1].className='cand-site';d[1].innerHTML=pin+'<span>'+esc(t)+'</span>';}
+   }
+   label.insertAdjacentHTML('beforeend','<span class="cand-pick" aria-hidden="true"><span class="pick-off">'+(blank?'Votar en blanco':'Elegir')+'</span><span class="pick-on">✓ Seleccionada</span></span>');
+  });
+ };
+})();
