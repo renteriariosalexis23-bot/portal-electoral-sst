@@ -330,16 +330,8 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
    '<div class="ex-intro"><div><span class="ex-kicker">¿QUÉ ES?</span><h3>'+esc(d.lead)+'</h3><p>'+esc(d.what)+'</p></div><aside class="ex-vote"><span class="ex-kicker">TU VOTO</span><p>'+esc(d.vote)+'</p><a href="#acceso" class="ex-cta">Ir a votar <span aria-hidden="true">→</span></a></aside></div>'+
    '<div class="ex-block"><span class="ex-kicker">¿QUÉ HACE?</span><h4>Sus funciones <small>Toca una tarjeta para ver el detalle</small></h4><div class="ex-funcs">'+d.functions.map(([ic,t,x],i)=>'<button class="ex-func" aria-pressed="false"><span class="ex-front">'+ico(ic)+'<small>0'+(i+1)+'</small><strong>'+esc(t)+'</strong><em>Ver más +</em></span><span class="ex-back"><strong>'+esc(t)+'</strong><span>'+esc(x)+'</span></span></button>').join('')+'</div></div>'+
    '<div class="ex-block"><span class="ex-kicker">EN TU DÍA A DÍA</span><h4>¿Cuándo actúa el comité?</h4><ol class="ex-cases">'+d.cases.map(([s,a],i)=>'<li><span class="ex-case-n">'+(i+1)+'</span><div><b>'+esc(s)+'</b><p>'+esc(a)+'</p></div></li>').join('')+'</ol></div>'+
-   '<div class="ex-block ex-quiz"><span class="ex-kicker">PONTE A PRUEBA</span><h4>¿Verdadero o falso? <small class="ex-score" aria-live="polite">0 de '+d.quiz.length+' respondidas</small></h4>'+d.quiz.map(([q],i)=>'<div class="ex-q" data-q="'+i+'"><p>'+esc(q)+'</p><div class="ex-q-btns"><button data-a="true">Verdadero</button><button data-a="false">Falso</button></div><p class="ex-q-fb" hidden></p></div>').join('')+'</div>'+
    '<div class="ex-foot"><p>'+esc(d.note)+'</p><a href="'+d.source+'" target="_blank" rel="noopener">'+esc(d.label)+' ↗</a></div>';
   panel.querySelectorAll('.ex-func').forEach(f=>f.onclick=()=>{const on=f.getAttribute('aria-pressed')!=='true';f.setAttribute('aria-pressed',String(on));});
-  let answered=0,right=0;
-  panel.querySelectorAll('.ex-q').forEach(q=>{const [,ok,why]=d.quiz[+q.dataset.q];q.querySelectorAll('button').forEach(b=>b.onclick=()=>{
-   if(q.classList.contains('done'))return;q.classList.add('done');const good=(b.dataset.a==='true')===ok;answered++;if(good)right++;
-   b.classList.add(good?'is-right':'is-wrong');q.querySelectorAll('button').forEach(x=>x.disabled=true);
-   const fb=q.querySelector('.ex-q-fb');fb.hidden=false;fb.textContent=(good?'¡Correcto! ':'No exactamente. ')+'Es '+(ok?'verdadero':'falso')+'. '+why;
-   panel.querySelector('.ex-score').textContent=answered<d.quiz.length?answered+' de '+d.quiz.length+' respondidas':'Acertaste '+right+' de '+d.quiz.length+(right===d.quiz.length?' · ¡Excelente!':'');
-  });});
   if(!still)panel.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:450,easing:'cubic-bezier(.2,.7,.2,1)'});
   if(!still){const items=panel.querySelectorAll('.ex-func,.ex-cases li,.ex-q');items.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:500,delay:120+i*60,easing:'ease-out',fill:'backwards'}));}
  }
