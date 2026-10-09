@@ -387,4 +387,4 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  };
 })();
 
-(()=>{const photo=document.querySelector('.hero-photo'),copy=document.querySelector('.hero-copy');if(!photo||!copy)return;const button=document.createElement('button');button.className='hero-motion-toggle';button.type='button';button.textContent='Pausar movimiento';button.setAttribute('aria-label','Pausar movimiento de la fotografía de portada');button.onclick=()=>{const paused=photo.classList.toggle('motion-paused');button.textContent=paused?'Reanudar movimiento':'Pausar movimiento';button.setAttribute('aria-label',button.textContent+' de la fotografía de portada');};copy.append(button);})();
+

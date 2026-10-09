@@ -432,9 +432,9 @@ body,button,input,select{font-family:var(--sans)}
 
 /* Movimiento suave de la fotografía principal. */
 .hero-photo{overflow:hidden}
-.hero-photo>.hero-slide.is-active{animation:portada-zoom 22s ease-in-out infinite alternate;transform-origin:60% 35%;will-change:transform}
-@keyframes portada-zoom{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.09) translate3d(-.7%,.5%,0)}}
+.hero-photo>.hero-slide.is-active{animation:portada-zoom 30s ease-in-out infinite alternate;transform-origin:60% 35%;will-change:transform}
+@keyframes portada-zoom{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.025) translate3d(-.2%,.1%,0)}}
 .hero-motion-toggle{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:8px 13px;border:1px solid #ffffff70;border-radius:20px;background:#29162588;color:#fff;font-size:11px}
 .hero-photo.motion-paused>.hero-slide.is-active{animation-play-state:paused}
-@media(max-width:600px){.hero-photo>.hero-slide.is-active{transform-origin:55% 30%;animation-duration:26s}}
+@media(max-width:600px){.hero-photo>.hero-slide.is-active{transform-origin:55% 30%;animation-duration:34s}}
 @media(prefers-reduced-motion:reduce){.hero-photo>.hero-slide.is-active{animation:none!important;transform:none!important}.hero-motion-toggle{display:none}}
