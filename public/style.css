@@ -523,6 +523,6 @@ body,button,input,select{font-family:var(--sans)}
 #ballot .candidate:not(.blank-option) .cand-check{display:none}
 
 /* Ingreso con DNI + código personal */
-#login input#dni{width:100%;border:1px solid #d8ccd5;border-radius:4px;padding:15px;font:600 18px var(--sans);letter-spacing:.12em;background:#fdfbfc;color:var(--ink)}
-#login input#code{font:600 18px "Courier New",monospace;letter-spacing:.14em;text-transform:uppercase}
+#login input#dni,#login input#code{width:100%;border:1px solid #d8ccd5;border-radius:4px;padding:15px;font:600 18px var(--sans);letter-spacing:.12em;background:#fdfbfc;color:var(--ink)}
+#login input#code{border:1px solid #d8ccd5;border-radius:4px;padding:15px;background:#fdfbfc;color:var(--ink);font:600 18px "Courier New",monospace;letter-spacing:.14em;text-transform:uppercase}
 #login input#code::placeholder,#login input#dni::placeholder{font:400 15px var(--sans);letter-spacing:0;text-transform:none}

@@ -101,3 +101,23 @@ test('carga del padrón desde Excel, ingreso con DNI + código y reemplazo de c�
   assert.equal(await login('45781236',newCode),200);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('modo prueba: el Excel genera códigos de prueba que sirven para ingresar',async()=>{
+ const {mkdtempSync,cpSync,rmSync,writeFileSync,readFileSync,readdirSync}=await import('node:fs');
+ const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {execFileSync,spawn}=await import('node:child_process');
+ const {writeXlsx}=await import('./padron.mjs');
+ const dir=mkdtempSync(join(tmpdir(),'ih-demo-padron-'));
+ for(const name of ['server.mjs','core.mjs','padron.mjs','tarjetas.mjs','import-padron.mjs','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ const cfg=JSON.parse(readFileSync(new URL('./config.json',import.meta.url)));
+ writeFileSync(join(dir,'config.json'),JSON.stringify({...cfg,mode:'demo'}));
+ writeFileSync(join(dir,'padron.xlsx'),writeXlsx([['DNI','NOMBRE','SST','HS'],['45781236','María','SI','SI']]));
+ try{
+  assert.match(execFileSync(process.execPath,['import-padron.mjs','padron.xlsx'],{cwd:dir,encoding:'utf8'}),/MODO PRUEBA[\s\S]*1 códigos nuevos/);
+  const files=readdirSync(join(dir,'credenciales'));const card=readFileSync(join(dir,'credenciales',files.find(f=>f.startsWith('PRUEBA-tarjetas-'))),'utf8');
+  assert.match(card,/PRUEBA · NO VÁLIDA/);const code=card.match(/class="code">([A-Z0-9-]+)</)[1];
+  const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18789'},stdio:['ignore','pipe','pipe']});
+  try{await new Promise((ok,ko)=>{child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:'))ok();});child.on('exit',c=>ko(Error('exit '+c)));});
+   const r=await fetch('http://127.0.0.1:18789/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dni:'45781236',code,reviewed:['sst','hs']})});assert.equal(r.status,200);}
+  finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;}
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});

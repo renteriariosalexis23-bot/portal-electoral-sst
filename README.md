@@ -29,6 +29,9 @@ El servidor escucha solo en este equipo. Falta alojamiento con HTTPS y controles
 
 La junta debe confirmar padrón por comité, candidaturas, cantidad de marcas permitidas, titulares/suplentes, reglas de empates e impugnaciones, fechas del mandato y actas. Dos marcas en SST son un ejemplo, no una regla legal ni una asignación automática de cargos. No se proclaman ganadores automáticamente. El panel no reemplaza actas firmadas.
 
+## Ensayar con tu propio Excel (modo prueba)
+Con config.json en `"mode": "demo"` puedes ejecutar `node import-padron.mjs padron.xlsx`: los códigos se guardan en la base de demostración (demo-dni.sqlite), las tarjetas salen marcadas "PRUEBA · NO VÁLIDA" en credenciales/PRUEBA-tarjetas-FECHA.html, y sirven para ingresar al portal de prueba. Para empezar de cero, cierra el servidor y borra data/demo-dni.sqlite. No entregues tarjetas de prueba a los trabajadores.
+
 ## Preparar datos (solo después de resolver los pendientes)
 Cada trabajador ingresa con su **DNI + un código personal** (por ejemplo `K7QM-4XPA`). El DNI solo identifica a la persona; el código, que la junta entrega en persona, prueba que es ella. El código acepta minúsculas y no necesita el guion.
 
