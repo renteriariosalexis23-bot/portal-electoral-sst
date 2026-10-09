@@ -392,7 +392,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 const reviewedCommittees=new Set();
 function learningReady(){return reviewedCommittees.has('sst')&&reviewedCommittees.has('hs');}
 function refreshLearningGate(){
- document.querySelectorAll('a[href="#acceso"],a[data-learning-link]').forEach(a=>{a.dataset.learningLink='true';a.setAttribute('aria-disabled',String(!learningReady()));a.classList.toggle('learning-locked',!learningReady());if(a.classList.contains('hero-link'))a.innerHTML=learningReady()?'Ir a votar ↗':'Primero conoce los comités 🔒';});
+ document.querySelectorAll('a[href="#acceso"],a[data-learning-link]').forEach(a=>{a.dataset.learningLink='true';a.setAttribute('aria-disabled',String(!learningReady()));a.classList.toggle('learning-locked',!learningReady());if(a.classList.contains('hero-link'))a.innerHTML=learningReady()?'Ir a votar ↗':'Comenzar →';});
 }
 const unrestrictedLogin=login;
 login=function(){if(learningReady()){unrestrictedLogin();return;}$('#acceso').classList.remove('voting-focus');content.innerHTML='<div class="eyebrow">ANTES DE VOTAR</div><h2>Conoce a los dos comités</h2><p>Revisa qué hace cada comité y confirma su lectura al final de cada ficha.</p><p>'+ (reviewedCommittees.has('sst')?'✓':'○')+' Seguridad y Salud en el Trabajo<br>'+(reviewedCommittees.has('hs')?'✓':'○')+' Intervención frente al Hostigamiento Sexual</p><a class="hero-link" href="#comites">Revisar información →</a>';};
