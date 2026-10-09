@@ -296,7 +296,11 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
   people:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5"/>',
   scale:'<path d="M12 3v18M5 21h14M6 7h12M6 7l-3 7h6zM18 7l-3 7h6z"/>',
   doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h4"/>',
-  shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>'
+  shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/>',
+  aid:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M9 6V4h6v2M12 10v6M9 13h6"/>',
+  learn:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
+  chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>'
  };
  const ico=k=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[k]+'</svg>';
  const data={
@@ -328,12 +332,12 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
   panel.setAttribute('aria-labelledby','tab-'+id);
   panel.innerHTML=
    '<div class="ex-intro"><div><span class="ex-kicker">¿QUÉ ES?</span><h3>'+esc(d.lead)+'</h3><p>'+esc(d.what)+'</p></div><aside class="ex-vote"><span class="ex-kicker">TU VOTO</span><p>'+esc(d.vote)+'</p><a href="#acceso" class="ex-cta">Ir a votar <span aria-hidden="true">→</span></a></aside></div>'+
-   '<div class="ex-block"><span class="ex-kicker">¿QUÉ HACE?</span><h4>Sus funciones <small>Toca una tarjeta para ver el detalle</small></h4><div class="ex-funcs">'+d.functions.map(([ic,t,x],i)=>'<button class="ex-func" aria-pressed="false"><span class="ex-front">'+ico(ic)+'<small>0'+(i+1)+'</small><strong>'+esc(t)+'</strong><em>Ver más +</em></span><span class="ex-back"><strong>'+esc(t)+'</strong><span>'+esc(x)+'</span></span></button>').join('')+'</div></div>'+
-   '<div class="ex-block"><span class="ex-kicker">EN TU DÍA A DÍA</span><h4>¿Cuándo actúa el comité?</h4><ol class="ex-cases">'+d.cases.map(([s,a],i)=>'<li><span class="ex-case-n">'+(i+1)+'</span><div><b>'+esc(s)+'</b><p>'+esc(a)+'</p></div></li>').join('')+'</ol></div>'+
+   '<div class="ex-block"><span class="ex-kicker">¿QUÉ HACE?</span><h4>Sus funciones <small>Toca una tarjeta para ver el detalle</small></h4><div class="ex-funcs">'+d.functions.map(([ic,t,x],i)=>'<button class="ex-func" aria-pressed="false" aria-label="'+esc(t)+'. Ver detalle"><span class="ex-front"><span class="ex-ico">'+ico(ic)+'</span><b class="ex-big" aria-hidden="true">0'+(i+1)+'</b><strong>'+esc(t)+'</strong><span class="ex-more">Ver más <i aria-hidden="true">+</i></span></span><span class="ex-back"><span class="ex-ico">'+ico(ic)+'</span><strong>'+esc(t)+'</strong><span class="ex-desc">'+esc(x)+'</span><span class="ex-more">Volver <i aria-hidden="true">↺</i></span></span></button>').join('')+'</div></div>'+
+   '<div class="ex-block"><span class="ex-kicker">EN TU DÍA A DÍA</span><h4>¿Cuándo actúa el comité?</h4><ol class="ex-flow">'+d.cases.map(([s,a],i)=>'<li><div class="ex-node" aria-hidden="true">'+ico((id==='sst'?['alert','aid','learn']:['chat','scale','doc'])[i])+'<span>'+(i+1)+'</span></div><div class="ex-sit"><small>'+(id==='sst'?'SITUACIÓN':'MOMENTO')+' '+(i+1)+'</small><b>'+esc(s)+'</b></div><div class="ex-act"><small>QUÉ HACE EL COMITÉ</small><p>'+esc(a)+'</p></div></li>').join('')+'</ol></div>'+
    '<div class="ex-foot"><p>'+esc(d.note)+'</p><a href="'+d.source+'" target="_blank" rel="noopener">'+esc(d.label)+' ↗</a></div>';
   panel.querySelectorAll('.ex-func').forEach(f=>f.onclick=()=>{const on=f.getAttribute('aria-pressed')!=='true';f.setAttribute('aria-pressed',String(on));});
   if(!still)panel.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:450,easing:'cubic-bezier(.2,.7,.2,1)'});
-  if(!still){const items=panel.querySelectorAll('.ex-func,.ex-cases li,.ex-q');items.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:500,delay:120+i*60,easing:'ease-out',fill:'backwards'}));}
+  if(!still){const items=panel.querySelectorAll('.ex-func,.ex-flow li,.ex-q');items.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:500,delay:120+i*60,easing:'ease-out',fill:'backwards'}));}
  }
  box.querySelectorAll('.ex-tab').forEach(t=>{t.onclick=()=>render(t.dataset.tab);t.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const tabs=[...box.querySelectorAll('.ex-tab')],n=tabs[(tabs.indexOf(t)+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];n.focus();render(n.dataset.tab);}};});
  render('sst');
