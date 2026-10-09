@@ -19,7 +19,8 @@ const sessions=new Map(),attempts=new Map();
 const demoElections=cfg.elections.map(e=>({...e,ready:true,pendingReason:undefined}));
 const clockConfig=demo?{...cfg,elections:demoElections,opens:'2020-01-01T00:00:00Z',closes:'2099-01-01T00:00:00Z'}:cfg;
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
-function throttle(key){const old=attempts.get(key);const v=old&&old.end>Date.now()?old:{n:0,end:Date.now()+900000};v.n++;attempts.set(key,v);if(v.n>30)throw Error('Demasiados intentos. Espera 15 minutos.');}
+function guard(key){const v=attempts.get(key);if(v&&v.end>Date.now()&&v.n>=30)throw Error('Demasiados intentos. Espera 15 minutos.');}
+function fail(key){const old=attempts.get(key);const v=old&&old.end>Date.now()?old:{n:0,end:Date.now()+900000};v.n++;attempts.set(key,v);}
 setInterval(()=>{for(const [k,v] of sessions)if(v.expires<Date.now())sessions.delete(k);for(const [k,v] of attempts)if(v.end<Date.now())attempts.delete(k);},60000).unref();
 const server=http.createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
@@ -37,13 +38,13 @@ const server=http.createServer(async(req,res)=>{
   let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>250000)return send(413,{error:'Solicitud demasiado grande.'});}
   const body=JSON.parse(raw);
   if(path==='/api/login'){
-   throttle('login:'+req.socket.remoteAddress);
-   if(typeof body.code!=='string'||!db.prepare('SELECT 1 FROM voters WHERE code_hash=?').get(hash(body.code)))return send(401,{error:'Credencial inválida.'});
+   const lk='login:'+req.socket.remoteAddress;guard(lk);
+   if(typeof body.code!=='string'||!db.prepare('SELECT 1 FROM voters WHERE code_hash=?').get(hash(body.code))){fail(lk);return send(401,{error:'Credencial inválida.'});}
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:body.code,expires:Date.now()+1800000});return send(200,{token});
   }
   if(path==='/api/admin'||path==='/api/admin-receipt'){
-   throttle('admin:'+req.socket.remoteAddress);
-   if(typeof body.key!=='string'||!equal(body.key,admin))return send(401,{error:'Clave incorrecta.'});
+   const ak='admin:'+req.socket.remoteAddress;guard(ak);
+   if(typeof body.key!=='string'||!equal(body.key,admin)){fail(ak);return send(401,{error:'Clave incorrecta.'});}
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
    const closed=Date.now()>=Date.parse(cfg.closes);
    const voters=db.prepare('SELECT code_hash,employee,eligible FROM voters ORDER BY employee').all().map(v=>({employee:v.employee,signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(v.code_hash).map(s=>s.election),eligible:JSON.parse(v.eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(v.code_hash).map(p=>p.election)}));

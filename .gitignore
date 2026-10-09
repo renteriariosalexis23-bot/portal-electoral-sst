@@ -1,0 +1,5 @@
+data/*.sqlite
+data/*.sqlite-*
+credenciales*.json
+padron.json
+node_modules/
