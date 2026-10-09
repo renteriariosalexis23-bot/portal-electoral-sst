@@ -429,3 +429,12 @@ body,button,input,select{font-family:var(--sans)}
 .hero-photo>.hero-slide{object-position:center 44%}.hero-photo:after{background:linear-gradient(90deg,rgba(23,15,24,.83),rgba(23,15,24,.4) 62%,rgba(23,15,24,.16))}@media(max-width:600px){.hero-photo>.hero-slide{object-position:60% center}}
 
 .hero-photo>.hero-slide.is-active{object-position:center top;animation:none;transform:none}.lab-brand{display:inline-block;background:#fffffff2;color:#861079;padding:12px 18px;border-radius:5px;font-size:12px;letter-spacing:1.4px;margin-bottom:24px}.lab-brand strong{display:block;font-family:Georgia,serif;font-size:25px;letter-spacing:.5px;margin-top:4px}@media(max-width:600px){.lab-brand{font-size:10px}.lab-brand strong{font-size:22px}.hero-photo>.hero-slide.is-active{object-position:42% top}}
+
+/* Movimiento suave de la fotografía principal. */
+.hero-photo{overflow:hidden}
+.hero-photo>.hero-slide.is-active{animation:portada-zoom 22s ease-in-out infinite alternate;transform-origin:60% 35%;will-change:transform}
+@keyframes portada-zoom{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.09) translate3d(-.7%,.5%,0)}}
+.hero-motion-toggle{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:8px 13px;border:1px solid #ffffff70;border-radius:20px;background:#29162588;color:#fff;font-size:11px}
+.hero-photo.motion-paused>.hero-slide.is-active{animation-play-state:paused}
+@media(max-width:600px){.hero-photo>.hero-slide.is-active{transform-origin:55% 30%;animation-duration:26s}}
+@media(prefers-reduced-motion:reduce){.hero-photo>.hero-slide.is-active{animation:none!important;transform:none!important}.hero-motion-toggle{display:none}}
