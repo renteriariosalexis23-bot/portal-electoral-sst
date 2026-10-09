@@ -271,7 +271,7 @@ body,button,input,select{font-family:var(--sans)}
 
 /* Cómo votar */
 .howto{padding:80px 0 40px}
-.howto-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;position:relative;margin-top:36px}
+.howto-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px;position:relative;margin-top:36px}
 .howto-steps:before{content:"";position:absolute;left:0;right:0;top:34px;height:2px;background:linear-gradient(90deg,var(--brand),#d46bc4);transform:scaleX(0);transform-origin:left;transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
 .howto-steps.in:before{transform:scaleX(1)}
 .howto-steps li{display:block;position:relative;margin:0;padding:0 6px 0 0}
@@ -445,3 +445,5 @@ body,button,input,select{font-family:var(--sans)}
 @keyframes portada-position{from{object-position:50% 0%}to{object-position:50% 7%}}
 
 .learning-locked{opacity:.72;cursor:pointer}.reading-confirmation{margin-top:25px;padding:24px;border:1px solid #d6afd0;border-radius:14px;background:#f8edf5}.reading-confirmation p{font-size:14px;line-height:1.6}.reading-confirmation button{margin:5px 10px 5px 0}
+
+@media(max-width:500px){.howto-steps{grid-template-columns:1fr}.howto-steps li{padding-left:80px;min-height:90px}.howto-steps .howto-n{position:absolute;left:0;top:0;width:56px;height:56px}.howto-steps h3{margin-top:0}}
