@@ -133,8 +133,8 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 (()=>{
  const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const head=document.querySelector('header'),bar=document.createElement('div');bar.className='scroll-progress';document.body.append(bar);
- const heroImg=document.querySelector('.hero-photo>img');
- function onScroll(){const y=scrollY,max=document.documentElement.scrollHeight-innerHeight;bar.style.setProperty('transform','scaleX('+(max>0?Math.min(1,y/max):0)+')');head.classList.toggle('is-scrolled',y>10);if(heroImg&&!still&&y<900)heroImg.style.setProperty('margin-top',(y*.12)+'px');}
+ const heroImgs=document.querySelectorAll('.hero-photo>img');
+ function onScroll(){const y=scrollY,max=document.documentElement.scrollHeight-innerHeight;bar.style.setProperty('transform','scaleX('+(max>0?Math.min(1,y/max):0)+')');head.classList.toggle('is-scrolled',y>10);if(!still&&y<900)heroImgs.forEach(i=>i.style.setProperty('margin-top',(y*.12)+'px'));}
  addEventListener('scroll',onScroll,{passive:true});onScroll();
 
  /* Cuenta regresiva hacia la apertura */
@@ -250,4 +250,37 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
   if(out)out.insertAdjacentHTML('beforebegin','<p class="secret-note">'+lock+'<span>Tu voto es secreto: el sistema registra que participaste, no por quién votaste.</span></p>');
  };
  setSteps(0);
+})();
+
+/* ===== Portada en movimiento, cifras, candidaturas y revelado ===== */
+(()=>{
+ const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ /* Transición de imágenes de portada */
+ const slides=[...document.querySelectorAll('.hero-slide')],dots=[...document.querySelectorAll('.hero-dot')];let cur=0,timer=null;
+ function show(n){cur=(n+slides.length)%slides.length;slides.forEach((s,i)=>s.classList.toggle('is-active',i===cur));dots.forEach((d,i)=>{d.classList.remove('is-active');void d.offsetWidth;d.classList.toggle('is-active',i===cur);d.setAttribute('aria-pressed',String(i===cur));});}
+ function auto(){clearInterval(timer);if(!still&&slides.length>1)timer=setInterval(()=>show(cur+1),7000);}
+ dots.forEach((d,i)=>d.onclick=()=>{show(i);auto();});
+ if(slides.length){show(0);auto();}
+
+ /* Revelado y contadores */
+ const io=new IntersectionObserver(es=>{for(const e of es){if(!e.isIntersecting)continue;const el=e.target;el.classList.add('in');io.unobserve(el);
+  const n=el.querySelector('[data-count]');if(n&&!still){const end=+n.dataset.count,suf=n.dataset.suffix||'',t0=performance.now();(function run(t){const k=Math.min(1,(t-t0)/1400);n.textContent=Math.round(end*(1-Math.pow(1-k,4)))+suf;if(k<1)requestAnimationFrame(run);})(t0);}}},{threshold:.2});
+ function watch(sel){document.querySelectorAll(sel).forEach(el=>{if(!still)el.classList.add('rv');io.observe(el);});}
+ watch('.stat');watch('.howto-steps li');
+ const steps=document.querySelector('.howto-steps');if(steps)io.observe(steps);
+
+ /* Iniciales para la junta */
+ const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
+ function avatar(name,i){const w=name.trim().split(/\s+/),a=document.createElement('i');a.className='avatar';a.setAttribute('aria-hidden','true');a.textContent=(w[0][0]+(w[1]?w[1][0]:'')).toUpperCase();a.style.setProperty('--av',tones[i%tones.length]);return a;}
+ document.querySelectorAll('.board-member').forEach((m,i)=>{const h=m.querySelector('h3');if(h)m.prepend(avatar(h.textContent,i+2));});
+
+ /* Carrusel de candidaturas */
+ const track=document.getElementById('cands-track');
+ const wait=setInterval(()=>{
+  if(typeof cfg==='undefined'||!cfg||!track)return;clearInterval(wait);
+  const list=(cfg.elections[0]||{candidates:[]}).candidates;
+  const card=(c,i)=>{const d=document.createElement('article');d.className='cand-card';d.append(avatar(c.name,i));d.insertAdjacentHTML('beforeend','<small>CANDIDATURA '+String(c.number||i+1).padStart(2,'0')+'</small><strong>'+esc(c.name)+'</strong><p>'+esc(c.role||'')+'<br>'+esc(c.site||'')+'</p>');return d;};
+  list.forEach((c,i)=>track.append(card(c,i)));
+  if(!still){list.forEach((c,i)=>{const d=card(c,i);d.setAttribute('aria-hidden','true');track.append(d);});track.parentElement.classList.add('cands-mask');}
+ },200);
 })();
