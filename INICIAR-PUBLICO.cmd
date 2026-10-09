@@ -9,12 +9,6 @@ where cloudflared >nul 2>nul || (echo Falta instalar cloudflared. Abre una venta
 set TRUST_CLOUDFLARE=1
 set PUBLIC_HOST=elecciones.imagehealth.com.pe
 if not defined PORT set PORT=8787
-if not defined ADMIN_KEY (
-  echo.
-  echo En modo oficial escribe la clave de la junta ^(minimo 32 caracteres^).
-  echo En modo prueba deja vacio y presiona Enter.
-  set /p ADMIN_KEY=Clave de la junta: 
-)
 cls
 
 start "Portal electoral - NO CERRAR" cmd /k node server.mjs

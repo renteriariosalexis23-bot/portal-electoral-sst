@@ -18,7 +18,7 @@ test('HTTP: autenticación, emisión, duplicado, panel protegido y cierre de ses
  const {fileURLToPath}=await import('node:url');
  const {spawn}=await import('node:child_process');
  const dir=mkdtempSync(join(tmpdir(),'ih-election-test-'));
- for(const name of ['server.mjs','core.mjs','padron.mjs','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ for(const name of ['server.mjs','core.mjs','padron.mjs','junta.json','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
  const key='test-only-key-abcdefghijklmnopqrstuvwxyz';
  const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18787',ADMIN_KEY:key},stdio:['ignore','pipe','pipe']});
  try{
@@ -75,7 +75,7 @@ test('carga del padrón desde Excel, ingreso con DNI + código y reemplazo de c�
  const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {execFileSync,spawn}=await import('node:child_process');
  const {writeXlsx}=await import('./padron.mjs');
  const dir=mkdtempSync(join(tmpdir(),'ih-padron-test-'));
- for(const name of ['server.mjs','core.mjs','padron.mjs','tarjetas.mjs','import-padron.mjs','reemplazar-codigo.mjs','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ for(const name of ['server.mjs','core.mjs','padron.mjs','tarjetas.mjs','import-padron.mjs','reemplazar-codigo.mjs','claves-junta.mjs','junta.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
  const cfg=JSON.parse(readFileSync(new URL('./config.json',import.meta.url)));
  writeFileSync(join(dir,'config.json'),JSON.stringify({...cfg,mode:'production',approved:true,opens:'2099-01-01T09:00:00-05:00',closes:'2099-01-01T16:00:00-05:00'}));
  writeFileSync(join(dir,'padron.xlsx'),writeXlsx([['DNI','NOMBRE','SST','HS'],['45781236','María Pérez','SI','SI'],['70123459','José Quispe','SI','NO']]));
@@ -83,6 +83,7 @@ test('carga del padrón desde Excel, ingreso con DNI + código y reemplazo de c�
  try{
   assert.match(run('import-padron.mjs','padron.xlsx','--revisar'),/2 trabajadores \(2 en SST, 1 en HS\)/);
   assert.match(run('import-padron.mjs','padron.xlsx'),/2 códigos nuevos/);
+  assert.match(run('claves-junta.mjs'),/Presidente, Secretaria, Vocal 1, Vocal 2/);
   assert.match(run('import-padron.mjs','padron.xlsx'),/No hay trabajadores nuevos/);
   const files=readdirSync(join(dir,'credenciales'));assert.ok(files.some(f=>f.startsWith('tarjetas-')));
   const creds=JSON.parse(readFileSync(join(dir,'credenciales',files.find(f=>f.endsWith('.json')))));
@@ -107,7 +108,7 @@ test('modo prueba: el Excel genera códigos de prueba que sirven para ingresar',
  const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {execFileSync,spawn}=await import('node:child_process');
  const {writeXlsx}=await import('./padron.mjs');
  const dir=mkdtempSync(join(tmpdir(),'ih-demo-padron-'));
- for(const name of ['server.mjs','core.mjs','padron.mjs','tarjetas.mjs','import-padron.mjs','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ for(const name of ['server.mjs','core.mjs','padron.mjs','tarjetas.mjs','import-padron.mjs','junta.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
  const cfg=JSON.parse(readFileSync(new URL('./config.json',import.meta.url)));
  writeFileSync(join(dir,'config.json'),JSON.stringify({...cfg,mode:'demo'}));
  writeFileSync(join(dir,'padron.xlsx'),writeXlsx([['DNI','NOMBRE','SST','HS'],['45781236','María','SI','SI']]));
@@ -126,7 +127,7 @@ test('túnel Cloudflare: límite de intentos por IP real y origen público acept
  const {mkdtempSync,cpSync,rmSync,readdirSync}=await import('node:fs');
  const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {spawn}=await import('node:child_process');
  const dir=mkdtempSync(join(tmpdir(),'ih-tunnel-test-'));
- for(const name of ['server.mjs','core.mjs','padron.mjs','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ for(const name of ['server.mjs','core.mjs','padron.mjs','junta.json','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
  const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18790',TRUST_CLOUDFLARE:'1'},stdio:['ignore','pipe','pipe']});
  try{
   await new Promise((ok,ko)=>{child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:'))ok();});child.on('exit',c=>ko(Error('exit '+c)));});
@@ -137,5 +138,31 @@ test('túnel Cloudflare: límite de intentos por IP real y origen público acept
   assert.equal(await login('192.0.2.50',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']},'https://ejemplo-abc.trycloudflare.com'),200);
   assert.equal(await login('192.0.2.51',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']},'https://sitio-malicioso.example'),403);
   assert.ok(readdirSync(join(dir,'data','respaldos')).some(f=>f.endsWith('.sqlite')));
+ }finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;rmSync(dir,{recursive:true,force:true});}
+});
+
+test('junta: clave por integrante, registro de ingresos y escrutinio con dos integrantes',async()=>{
+ const {mkdtempSync,cpSync,rmSync}=await import('node:fs');
+ const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {spawn}=await import('node:child_process');
+ const dir=mkdtempSync(join(tmpdir(),'ih-junta-test-'));
+ for(const name of ['server.mjs','core.mjs','padron.mjs','junta.json','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18791'},stdio:['ignore','pipe','pipe']});
+ try{
+  await new Promise((ok,ko)=>{child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:'))ok();});child.on('exit',c=>ko(Error('exit '+c)));});
+  const api=async(path,body,token='')=>{const r=await fetch('http://127.0.0.1:18791/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
+  const config=await (await fetch('http://127.0.0.1:18791/api/config')).json();
+  assert.deepEqual(config.board.map(m=>m.role),['Presidente','Secretaria','Vocal 1','Vocal 2']);assert.equal(JSON.stringify(config.board).includes('key'),false);
+  const pres={member:'presidente',key:'junta-demo'},sec={member:'secretaria',key:'JUNTA-DEMO'};
+  assert.equal((await api('admin',{key:{member:'presidente',key:'OTRA'}})).status,401);
+  const report=await api('admin',{key:pres});assert.equal(report.status,200);assert.equal(report.data.member.role,'Presidente');assert.equal(report.data.elections[0].results,null);
+  const token=(await api('login',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']})).data.token;
+  assert.equal((await api('vote',{election:'sst',selection:['s2']},token)).status,200);
+  assert.equal((await api('escrutinio',{key:pres,second:pres})).status,400);
+  assert.equal((await api('escrutinio',{key:pres,second:{member:'secretaria',key:'MAL'}})).status,401);
+  const esc=await api('escrutinio',{key:pres,second:sec});assert.equal(esc.status,200);
+  const sst=esc.data.elections.find(e=>e.id==='sst');assert.equal(sst.results.total,1);assert.equal(sst.results.candidates.find(c=>c.id==='s2').votes,1);
+  assert.deepEqual(esc.data.openedBy.map(m=>m.role),['Presidente','Secretaria']);
+  const events=(await api('admin',{key:sec})).data.events.map(e=>e.event).join('\n');
+  assert.match(events,/JUNTA_INGRESO Presidente/);assert.match(events,/ESCRUTINIO_ABIERTO Presidente \+ Secretaria/);assert.match(events,/JUNTA_INGRESO Secretaria/);
  }finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;rmSync(dir,{recursive:true,force:true});}
 });

@@ -526,3 +526,36 @@ body,button,input,select{font-family:var(--sans)}
 #login input#dni,#login input#code{width:100%;border:1px solid #d8ccd5;border-radius:4px;padding:15px;font:600 18px var(--sans);letter-spacing:.12em;background:#fdfbfc;color:var(--ink)}
 #login input#code{border:1px solid #d8ccd5;border-radius:4px;padding:15px;background:#fdfbfc;color:var(--ink);font:600 18px "Courier New",monospace;letter-spacing:.14em;text-transform:uppercase}
 #login input#code::placeholder,#login input#dni::placeholder{font:400 15px var(--sans);letter-spacing:0;text-transform:none}
+
+/* ===== Junta: integrante, escrutinio y actividad ===== */
+#adminform select,.esc-form select{width:100%;border:1px solid #d8ccd5;border-radius:4px;padding:14px;font:15px var(--sans);background:#fdfbfc;color:var(--ink)}
+#adminform input#key,.esc-form input{width:100%;border:1px solid #d8ccd5;border-radius:4px;padding:15px;background:#fdfbfc;color:var(--ink);font:600 17px "Courier New",monospace;letter-spacing:.12em;text-transform:uppercase}
+#adminform input#key::placeholder,.esc-form input::placeholder{letter-spacing:.06em}
+.admin-who{display:inline-flex;gap:6px;align-items:center;margin:4px 0 6px!important;padding:6px 12px;border-radius:99px;background:#f6eef5;color:#5c0f53!important;font-size:13px!important}
+.escrutinio{margin:30px 0 10px;padding:26px;border-radius:20px;background:linear-gradient(160deg,#fff 40%,#f7e8f4);border:1px solid #ecdbe8}
+.esc-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.esc-head h3{font-size:22px;margin:8px 0 6px;letter-spacing:-.02em}
+.esc-head p{margin:0;max-width:560px}
+.esc-lock{font-size:30px;flex:none}
+.esc-form{max-width:480px;margin-top:10px}
+.esc-wait{display:inline-block;margin-top:16px!important;padding:10px 16px;border-radius:10px;background:#fff;border:1px dashed #d9b5d2;font-weight:600;color:#5c0f53!important}
+.esc-demo{display:inline-block;padding:6px 12px;border:1.5px solid #b45309;color:#b45309!important;font-weight:700;border-radius:8px;font-size:12px!important}
+.esc-opened{font-size:13px!important}
+.esc-card{margin:18px 0;padding:20px;border-radius:16px;background:#fff;border:1px solid #ecdbe8;animation:rise .5s both}
+.esc-card h4{margin:0 0 4px;font-size:18px;color:var(--plum)}
+.esc-meta{margin:0 0 14px!important;font-size:13px!important}
+.esc-bars{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.esc-bars li{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) 40px 52px;gap:12px;align-items:center;margin:0}
+.esc-name{font-size:14px;font-weight:600;color:var(--plum);overflow-wrap:anywhere}
+.esc-track{height:14px;border-radius:99px;background:#f1e4ee;overflow:hidden}
+.esc-track i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#861079,#d46bc4);transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+.esc-blank .esc-track i{background:#b9a6b6}
+.esc-bars b{font-size:16px;text-align:right;font-variant-numeric:tabular-nums}
+.esc-bars small{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.activity{margin:24px 0;padding:16px 20px;border-radius:14px;background:#faf8f9;border:1px solid var(--line)}
+.activity summary{cursor:pointer;font-weight:700;color:var(--plum)}
+.activity summary span{display:inline-grid;place-items:center;min-width:24px;height:22px;margin-left:8px;padding:0 6px;border-radius:99px;background:#ecdbe8;font-size:12px}
+.activity ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px;max-height:320px;overflow:auto}
+.activity li{display:flex;gap:14px;margin:0;font-size:13px}
+.activity time{flex:none;width:120px;color:var(--muted);font-variant-numeric:tabular-nums}
+@media(max-width:600px){.esc-bars li{grid-template-columns:1fr 40px 48px}.esc-track{grid-column:1/-1;grid-row:2}.escrutinio{padding:18px}}

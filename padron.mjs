@@ -10,6 +10,10 @@ export function newCode(){let c='';for(let i=0;i<8;i++)c+=CODE_ALPHABET[randomIn
 /* Clave derivada lenta: la base no permite recuperar DNI ni código probando combinaciones rápido. */
 export function credential(dni,code){return scryptSync(normalizeDni(dni)+':'+normalizeCode(code),'image-health-elecciones-v1',32).toString('hex');}
 
+/* Claves de la junta: una por integrante, 12 caracteres legibles. */
+export function newBoardKey(){const c=newCode().replace('-','')+newCode().replace('-','').slice(0,4);return c.slice(0,4)+'-'+c.slice(4,8)+'-'+c.slice(8);}
+export function boardKey(id,key){return scryptSync('junta:'+id+':'+normalizeCode(key),'image-health-elecciones-v1',32).toString('hex');}
+
 /* Lector mínimo de .xlsx (ZIP + XML) sin dependencias. */
 function unzip(buf){
  let eocd=-1;for(let i=buf.length-22;i>=Math.max(0,buf.length-65558);i--)if(buf.readUInt32LE(i)===0x06054b50){eocd=i;break;}

@@ -36,16 +36,16 @@ if('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-moti
 
 $('#admin').onclick=async()=>{
  if(token)await logout();notice();$('#acceso').classList.add('voting-focus');
- content.innerHTML='<div class="eyebrow">JUNTA ELECTORAL</div><h2>Control de participación</h2><p>Consulta quién participó en cada comité. Las preferencias de voto son secretas.</p><form id="adminform"><label for="key">Clave de administración</label><input id="key" type="password" required autocomplete="off"><div class="actions"><button class="primary">Ingresar al panel</button><button type="button" id="return">Volver</button></div></form>';
+ content.innerHTML='<div class="eyebrow">JUNTA ELECTORAL</div><h2>Control de participación</h2><p>Consulta quién participó en cada comité. Las preferencias de voto son secretas.</p><form id="adminform"><label for="member">Integrante de la junta</label><select id="member" required><option value="">Elige tu nombre</option>'+(cfg.board||[]).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.role)+' · '+esc(m.name)+'</option>').join('')+'</select><label for="key">Clave personal</label><input id="key" type="password" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX"><div class="actions"><button class="primary">Ingresar al panel</button><button type="button" id="return">Volver</button></div></form>'+(cfg.mode==='demo'?'<p class="muted">Prueba: elige cualquier integrante y usa la clave JUNTA-DEMO.</p>':'');
  $('#return').onclick=login;
- $('#adminform').onsubmit=async event=>{event.preventDefault();const key=$('#key').value;try{const report=await api('admin',{key});renderAdmin(report,key);}catch(error){notice(error.message);}};
+ $('#adminform').onsubmit=async event=>{event.preventDefault();const key={member:$('#member').value,key:$('#key').value.trim()};try{const report=await api('admin',{key});renderAdmin(report,key);}catch(error){notice(error.message);}};
 };
 function renderAdmin(report,key){
  notice();content.innerHTML='<div class="admin-heading"><div><div class="eyebrow">JUNTA ELECTORAL · 2026–2028</div><h2>Control de participación</h2><p>Actualizado: '+esc(new Date().toLocaleTimeString('es-PE',{timeZone:'America/Lima'}))+' · Hora de Perú</p></div><div class="actions"><button id="refresh-admin">Actualizar</button><button id="exit-admin">Salir del panel</button></div></div>'+
  (report.demo?'<p class="admin-demo">Padrón de demostración: el DNI 12345678 es la cuenta de prueba. Los trabajadores reales aparecerán al cargar el padrón.</p>':'')+
  '<div class="admin-stats">'+report.elections.map(e=>{const pct=e.eligible?Math.round(100*e.participation/e.eligible):0;return '<article class="admin-stat"><h3>'+esc(e.title)+'</h3><div class="admin-number">'+pct+'<small>% de participación</small></div><progress max="100" value="'+pct+'" aria-label="Porcentaje de participación"></progress><div class="stat-details"><span><b>'+e.participation+'</b> Ya votaron</span><span><b>'+(e.eligible-e.participation)+'</b> Pendientes</span><span><b>'+e.eligible+'</b> Habilitados</span></div></article>';}).join('')+'</div>'+
  '<div class="admin-toolbar"><h3>Padrón y estado de participación</h3><button id="export-participation">Descargar CSV</button></div><div class="admin-filters"><label>Buscar por DNI<input id="worker-search" type="search" placeholder="DNI"></label><label>Mostrar<select id="worker-filter"><option value="all">Todos</option><option value="pending">Con votaciones pendientes</option><option value="done">Participación completa</option></select></label></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>DNI</th>'+report.elections.map(e=>'<th>'+esc(e.title)+'</th>').join('')+'</tr></thead><tbody id="worker-rows"></tbody></table></div><p class="muted">Solo se muestra si participó. No se relaciona a los trabajadores con las papeletas.</p>'+
- '<details class="admin-results"><summary>Resultados del escrutinio</summary>'+(report.closed?report.elections.map(e=>'<h3>'+esc(e.title)+'</h3><ul>'+e.results.candidates.map(c=>'<li>'+esc(c.name)+': '+c.votes+'</li>').join('')+'<li>En blanco: '+e.results.blank+'</li></ul>').join(''):'<p>Disponibles después del cierre oficial del 2 de noviembre de 2026 a las 4:00 p. m.</p>')+'</details>';
+ '<section class="escrutinio" id="escrutinio"></section>';
  $('.admin-filters').insertAdjacentHTML('beforeend','<label>Comité<select id="committee-filter"><option value="all">Ambos comités</option>'+report.elections.map(e=>'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>').join('')+'</select></label>');
  enhancePanel(report);signatureAdmin(report,key);
  const state=(v,id)=>!v.eligible.includes(id)?'No habilitado':v.voted.includes(id)?'Ya votó':'Pendiente';
@@ -424,4 +424,46 @@ if(guidePanel){new MutationObserver(addReadingConfirmation).observe(guidePanel,{
    label.insertAdjacentHTML('beforeend','<span class="cand-pick" aria-hidden="true"><span class="pick-off">'+(blank?'Votar en blanco':'Elegir')+'</span><span class="pick-on">✓ Seleccionada</span></span>');
   });
  };
+})();
+
+
+/* ===== Junta: integrante, registro de actividad, escrutinio con dos integrantes y acta ===== */
+function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+(()=>{
+ const fmt=d=>new Date(d).toLocaleString('es-PE',{timeZone:'America/Lima',dateStyle:'short',timeStyle:'short'});
+ const pct=(a,b)=>b?Math.round(1000*a/b)/10:0;
+ const labels={SERVER_START:'Inicio del servidor',PADRON_IMPORT:'Carga del padrón · códigos nuevos:',PADRON_IMPORT_PRUEBA:'Carga del padrón de prueba · códigos nuevos:',CLAVES_JUNTA:'Claves de la junta generadas:',CODE_REPLACED:'Código de un trabajador reemplazado',JUNTA_INGRESO:'Ingreso al panel:',ESCRUTINIO_ABIERTO:'Escrutinio abierto por'};
+ const eventLabel=ev=>{const [code,...rest]=ev.split(' ');return labels[code]?(labels[code]+(rest.length?' '+rest.join(' '):'')):ev;};
+ const baseAdmin2=renderAdmin;
+ renderAdmin=function(report,key){
+  baseAdmin2(report,key);
+  const head=content.querySelector('.admin-heading p');
+  if(head&&report.member)head.insertAdjacentHTML('beforebegin','<p class="admin-who">Ingresaste como <b>'+esc(report.member.role)+'</b> · '+esc(report.member.name)+'</p>');
+  const box=$('#escrutinio');if(!box)return;
+  const others=(cfg.board||[]).filter(m=>!key||m.id!==key.member);
+  const canOpen=report.closed||report.demo;
+  box.innerHTML='<div class="esc-head"><div><div class="eyebrow">ESCRUTINIO</div><h3>Resultados de la votación</h3><p>Por seguridad, los resultados solo se abren con <b>dos integrantes</b> de la junta, después del cierre.'+(report.demo?' En modo prueba puedes abrirlos ahora para ensayar.':'')+'</p></div><span class="esc-lock" aria-hidden="true">🔒</span></div>'+
+   (canOpen?'<form id="esc-form" class="esc-form"><label for="esc-member">Segundo integrante</label><select id="esc-member" required><option value="">Elige al segundo integrante</option>'+others.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.role)+' · '+esc(m.name)+'</option>').join('')+'</select><label for="esc-key">Su clave personal</label><input id="esc-key" type="password" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX"><div class="actions"><button class="primary">Abrir escrutinio</button></div></form>':'<p class="esc-wait">Disponible desde el '+esc(fmt(cfg.closes))+' (hora de Perú).</p>')+
+   '<div id="esc-results"></div>';
+  const form=$('#esc-form');
+  if(form)form.onsubmit=async ev=>{ev.preventDefault();try{const data=await api('escrutinio',{key,second:{member:$('#esc-member').value,key:$('#esc-key').value.trim()}});form.remove();showResults(data);}catch(err){notice(err.message);}};
+  const events=(report.events||[]).slice(-40).reverse();
+  content.insertAdjacentHTML('beforeend','<details class="activity"><summary>Registro de actividad <span>'+events.length+'</span></summary><ul>'+events.map(e=>'<li><time>'+esc(fmt(e.time))+'</time><span>'+esc(eventLabel(e.event))+'</span></li>').join('')+'</ul></details>');
+ };
+ function showResults(data){
+  const box=$('#esc-results');
+  box.innerHTML=(data.demo?'<p class="esc-demo">Resultados de prueba · no oficiales</p>':'')+'<p class="esc-opened">Abierto por '+data.openedBy.map(m=>'<b>'+esc(m.role)+'</b> ('+esc(m.name)+')').join(' y ')+' · '+esc(fmt(data.openedAt))+'</p>'+
+   data.elections.map(e=>{const r=e.results,max=Math.max(1,...r.candidates.map(c=>c.votes));return '<article class="esc-card"><h4>'+esc(e.title)+'</h4><p class="esc-meta">'+r.total+' votos emitidos de '+e.eligible+' habilitados · participación '+pct(e.participation,e.eligible)+'%</p><ol class="esc-bars">'+r.candidates.map(c=>'<li><span class="esc-name">'+String(c.number||'').padStart(2,'0')+' · '+esc(c.name)+'</span><span class="esc-track"><i data-w="'+(100*c.votes/max)+'"></i></span><b>'+c.votes+'</b><small>'+pct(c.votes,r.total)+'%</small></li>').join('')+'<li class="esc-blank"><span class="esc-name">Voto en blanco</span><span class="esc-track"><i data-w="'+(100*r.blank/max)+'"></i></span><b>'+r.blank+'</b><small>'+pct(r.blank,r.total)+'%</small></li></ol></article>';}).join('')+
+   '<div class="actions"><button class="primary" id="acta-btn">Descargar acta de escrutinio</button></div><p class="muted">El acta se imprime y la firman los integrantes de la junta. El portal no proclama ganadores: la junta aplica las reglas aprobadas.</p>';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>box.querySelectorAll('.esc-track i').forEach(i=>i.style.setProperty('width',i.dataset.w+'%'))));
+  $('#acta-btn').onclick=()=>openDoc(actaHtml(data),'acta-escrutinio.html');
+ }
+ function actaHtml(data){
+  const day=new Date(data.openedAt).toLocaleDateString('es-PE',{timeZone:'America/Lima',day:'2-digit',month:'long',year:'numeric'});
+  return '<!doctype html><html lang="es"><meta charset="utf-8"><title>Acta de escrutinio</title><style>@page{size:A4;margin:16mm}body{font:12.5px Arial,sans-serif;color:#222;max-width:180mm;margin:20px auto;line-height:1.5}h1{font-size:18px;text-align:center;margin:0 0 2px;color:#5c0f53}h2{font-size:14px;margin:18px 0 6px;color:#5c0f53}.c{text-align:center;margin:0 0 14px}table{width:100%;border-collapse:collapse;margin:6px 0}th,td{border:1px solid #999;padding:5px 7px;text-align:left}th{background:#f3eaf1}td.n{text-align:right;width:22mm}.demo{border:2px solid #b45309;color:#b45309;font-weight:bold;text-align:center;padding:6px;margin:10px 0}.obs{border:1px solid #999;height:28mm;margin-top:4px}.f{display:grid;grid-template-columns:1fr 1fr;gap:22mm 14mm;margin-top:26mm}.f div{border-top:1px solid #222;padding-top:4px;font-size:11.5px}</style>'+
+   '<h1>ACTA DE ESCRUTINIO</h1><p class="c"><b>'+esc(cfg.company)+'</b><br>Elección de representantes de los trabajadores · Periodo '+esc(cfg.period)+'</p>'+(data.demo?'<p class="demo">DOCUMENTO DE PRUEBA · SIN VALIDEZ</p>':'')+
+   '<p>El '+esc(day)+', siendo las '+esc(new Date(data.openedAt).toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'numeric',minute:'2-digit'}))+' (hora de Perú), concluida la votación electrónica programada de '+esc(new Date(cfg.opens).toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'numeric',minute:'2-digit'}))+' a '+esc(new Date(cfg.closes).toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'numeric',minute:'2-digit'}))+', la junta electoral abrió el escrutinio en el portal con la participación de '+data.openedBy.map(m=>esc(m.name)+' ('+esc(m.role)+')').join(' y ')+', con los siguientes resultados:</p>'+
+   data.elections.map(e=>{const r=e.results;return '<h2>'+esc(e.title)+'</h2><table><thead><tr><th>N.º</th><th>Candidatura</th><th>Votos</th></tr></thead><tbody>'+r.candidates.map(c=>'<tr><td>'+String(c.number||'').padStart(2,'0')+'</td><td>'+esc(c.name)+'</td><td class="n">'+c.votes+'</td></tr>').join('')+'<tr><td></td><td>Votos en blanco</td><td class="n">'+r.blank+'</td></tr><tr><th></th><th>Total de votos emitidos</th><th class="n">'+r.total+'</th></tr></tbody></table><p>Trabajadores habilitados: '+e.eligible+' · Participación: '+e.participation+' ('+pct(e.participation,e.eligible)+'%).</p>';}).join('')+
+   '<h2>Observaciones</h2><div class="obs"></div><p>Firman en señal de conformidad:</p><div class="f">'+(data.board||[]).map(m=>'<div>'+esc(m.name)+'<br>'+esc(m.role)+' de la junta electoral</div>').join('')+'</div></html>';
+ }
 })();

@@ -4,17 +4,29 @@ import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {openDB,hash,vote,signParticipation} from './core.mjs';
-import {credential,normalizeDni} from './padron.mjs';
+import {credential,normalizeDni,boardKey} from './padron.mjs';
 const root=dirname(fileURLToPath(import.meta.url)),cfg=JSON.parse(readFileSync(join(root,'config.json')));
 const demo=cfg.mode==='demo';
-if(!demo&&(!cfg.approved||!process.env.ADMIN_KEY||process.env.ADMIN_KEY.length<32))throw Error('Se requiere configuración aprobada y ADMIN_KEY de 32 caracteres como mínimo.');
+if(!demo&&!cfg.approved)throw Error('Se requiere configuración aprobada (approved: true).');
 mkdirSync(join(root,'data'),{recursive:true});
 const db=openDB(join(root,'data',demo?'demo-dni.sqlite':'election.sqlite'));
 const saved=db.prepare('SELECT value FROM config WHERE id=1').get();
 if(saved&&saved.value!==JSON.stringify(cfg))throw Error('La configuración cambió después de inicializar la base. Revisa el README antes de continuar.');
 db.prepare('INSERT OR IGNORE INTO config VALUES(1,?)').run(JSON.stringify(cfg));
 const admin=process.env.ADMIN_KEY||randomBytes(32).toString('hex');
-if(demo){db.prepare('INSERT OR IGNORE INTO voters VALUES(?,?,?)').run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nClave de junta para esta sesión: '+admin);}
+/* Junta: una clave por integrante (claves-junta.mjs). En demo se crean con la clave JUNTA-DEMO. */
+if(demo&&!db.prepare('SELECT COUNT(*) n FROM board').get().n&&existsSync(join(root,'junta.json'))){const ins=db.prepare('INSERT INTO board VALUES(?,?,?,?)');for(const m of JSON.parse(readFileSync(join(root,'junta.json'))))ins.run(m.id,m.name,m.role,hash(boardKey(m.id,'JUNTA-DEMO')));}
+if(!demo&&db.prepare('SELECT COUNT(*) n FROM board').get().n<2)throw Error('Genera las claves de la junta con: node claves-junta.mjs');
+const boardList=()=>db.prepare('SELECT id,name,role FROM board ORDER BY rowid').all();
+const lastSeen=new Map();
+function member(k){
+ if(demo&&typeof k==='string'&&equal(k,admin))return {id:'demo',name:'Clave temporal',role:'Prueba'};
+ if(!k||typeof k!=='object'||typeof k.member!=='string'||typeof k.key!=='string')return null;
+ const m=db.prepare('SELECT id,name,role,key_hash FROM board WHERE id=?').get(k.member);
+ return m&&equal(hash(boardKey(m.id,k.key)),m.key_hash)?m:null;
+}
+function results(e){const rows=db.prepare('SELECT selection FROM ballots WHERE election=?').all(e.id).map(b=>JSON.parse(b.selection));return {total:rows.length,blank:rows.filter(r=>!r.length).length,candidates:e.candidates.map(c=>({id:c.id,number:c.number,name:c.name,votes:rows.filter(r=>r.includes(c.id)).length}))};}
+if(demo){db.prepare('INSERT OR IGNORE INTO voters VALUES(?,?,?)').run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nJunta de prueba: elige cualquier integrante · clave JUNTA-DEMO');}
 db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('SERVER_START',new Date().toISOString());
 const sessions=new Map(),attempts=new Map();
 /* Publicación con Cloudflare Tunnel: todo llega desde 127.0.0.1, así que la IP real viene en CF-Connecting-IP. */
@@ -40,7 +52,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&['/','/app.js','/style.css'].includes(path)){res.writeHead(200,{'Content-Type':path==='/'?'text/html; charset=utf-8':path.endsWith('.js')?'text/javascript; charset=utf-8':'text/css; charset=utf-8'});return res.end(readFileSync(join(root,'public',path==='/'?'index.html':path.slice(1))));}
   const assets={'/portada-corregida.png':'image/png','/portada-image-health.jpg':'image/jpeg','/logo.png':'image/png','/equipo.jpg':'image/jpeg','/salud.jpg':'image/jpeg','/fonts/jakarta.woff2':'font/woff2','/fonts/fraunces.woff2':'font/woff2','/fonts/fraunces-italic.woff2':'font/woff2'};
   if(req.method==='GET'&&assets[path]){res.writeHead(200,{'Content-Type':assets[path]});return res.end(readFileSync(join(root,'public',path.slice(1))));}
-  if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,serverTime:new Date().toISOString()});
+  if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,board:boardList(),serverTime:new Date().toISOString()});
   if(req.method!=='POST')return send(404,{error:'No encontrado.'});
   if(req.headers['content-type']!=='application/json')return send(415,{error:'Formato inválido.'});
   if(req.headers.origin&&!sameOrigin(req,req.headers.origin))return send(403,{error:'Origen inválido.'});
@@ -56,13 +68,23 @@ const server=http.createServer(async(req,res)=>{
    if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:key,expires:Date.now()+1800000});return send(200,{token});
   }
-  if(path==='/api/admin'||path==='/api/admin-receipt'){
+  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/escrutinio'){
    const ak='admin:'+clientIp(req);guard(ak);
-   if(typeof body.key!=='string'||!equal(body.key,admin)){fail(ak);return send(401,{error:'Clave incorrecta.'});}
+   const who=member(body.key);
+   if(!who){fail(ak);return send(401,{error:'Integrante o clave incorrecta.'});}
+   if(path==='/api/admin'&&!(lastSeen.get(who.id)>Date.now()-600000)){lastSeen.set(who.id,Date.now());db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('JUNTA_INGRESO '+who.role+' · '+who.name,new Date().toISOString());}
+   if(path==='/api/escrutinio'){
+    const second=member(body.second);
+    if(!second){fail(ak);return send(401,{error:'La clave del segundo integrante es incorrecta.'});}
+    if(second.id===who.id)return send(400,{error:'Se necesitan dos integrantes distintos de la junta.'});
+    if(!demo&&Date.now()<Date.parse(cfg.closes))return send(400,{error:'El escrutinio se abre después del cierre de la votación.'});
+    db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('ESCRUTINIO_ABIERTO '+who.role+' + '+second.role,new Date().toISOString());
+    return send(200,{demo,openedBy:[who,second].map(m=>({name:m.name,role:m.role})),openedAt:new Date().toISOString(),board:boardList(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:results(e)}))});
+   }
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
    const closed=Date.now()>=Date.parse(cfg.closes);
    const voters=db.prepare('SELECT code_hash,employee,eligible FROM voters ORDER BY employee').all().map(v=>({employee:v.employee,signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(v.code_hash).map(s=>s.election),eligible:JSON.parse(v.eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(v.code_hash).map(p=>p.election)}));
-   return send(200,{demo,closed,voters,elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:closed?{blank:db.prepare("SELECT COUNT(*) n FROM ballots WHERE election=? AND selection='[]'").get(e.id).n,candidates:e.candidates.map(c=>({name:c.name,votes:db.prepare('SELECT selection FROM ballots WHERE election=?').all(e.id).filter(b=>JSON.parse(b.selection).includes(c.id)).length}))}:null})),events:db.prepare('SELECT event,time FROM audit ORDER BY id').all()});
+   return send(200,{demo,closed,member:{name:who.name,role:who.role},voters,elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:null})),events:db.prepare('SELECT event,time FROM audit ORDER BY id').all()});
   }
   const token=(req.headers.authorization||'').replace(/^Bearer /,''),session=sessions.get(token);
   if(!session||session.expires<Date.now()){sessions.delete(token);return send(401,{error:'Sesión vencida. Ingresa nuevamente.'});}

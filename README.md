@@ -3,7 +3,7 @@ Primera versión funcional local, en modo demostración. No está publicada ni h
 
 ## Abrir
 Requiere Node.js 24 o superior. Ejecuta INICIAR.cmd y abre http://127.0.0.1:8787.
-Ingreso de prueba: DNI 12345678 y código DEMO-2026. La clave temporal del panel de junta se muestra en la consola.
+Ingreso de prueba: DNI 12345678 y código DEMO-2026. Panel de la junta de prueba: elige cualquier integrante y usa la clave JUNTA-DEMO.
 Para probar: entra, abre cada cédula, selecciona candidaturas o blanco, revisa y confirma. Cierra sesión al finalizar.
 Las pruebas se ejecutan con npm test. No requiere paquetes externos.
 
@@ -16,7 +16,7 @@ Las pruebas se ejecutan con npm test. No requiere paquetes externos.
 - Voto y registro de participación en una sola transacción; unicidad por persona y elección.
 - Papeletas sin ID de trabajador, correo, IP ni timestamp.
 - Reglas configurables de cantidad y composición; voto en blanco y revisión previa.
-- Resultados agregados restringidos al panel y disponibles después del cierre.
+- Clave personal por integrante de la junta, registro de ingresos y escrutinio que exige dos integrantes; acta de escrutinio imprimible.
 - Reporte JSON y eventos de inicio del servidor/importación.
 - Fecha oficial configurada: 02/11/2026, 09:00–16:00, America/Lima (UTC-05:00).
 En demo el horario de emisión está abierto para pruebas; los resultados conservan el bloqueo hasta la fecha oficial.
@@ -75,7 +75,10 @@ Cada trabajador ingresa con su **DNI + un código personal** (por ejemplo `K7QM-
    La base guarda solo una huella derivada lenta (scrypt) de DNI + código. Protege la carpeta credenciales/: contiene los códigos; no la subas a GitHub ni la envíes por correo. Entrega cada tarjeta en sobre cerrado y pide firma del cargo.
 6. Trabajadores nuevos: agrégalos al mismo Excel y vuelve a ejecutar el paso 5 antes de la apertura. Los que ya tienen código se saltan; solo se generan tarjetas para los nuevos.
 7. Código perdido: `node reemplazar-codigo.mjs DNI "Nombre"` anula el código anterior y genera una tarjeta nueva, solo si esa persona aún no votó y antes del cierre.
-8. Define ADMIN_KEY en el entorno con al menos 32 caracteres aleatorios y ejecuta node server.mjs.
+8. Genera las claves de la junta: `node claves-junta.mjs`. Crea una clave distinta para cada integrante listado en junta.json y una hoja imprimible en credenciales/. Entrégalas en sobre cerrado. Si alguien pierde la suya: `node claves-junta.mjs presidente` (o secretaria, vocal1, vocal2) genera solo esa y anula la anterior.
+9. Ejecuta node server.mjs (o INICIAR-PUBLICO.cmd). El servidor no arranca en modo oficial si la junta no tiene claves.
+
+**Panel de la junta:** cada integrante entra con su nombre y su clave personal; cada ingreso queda en el registro de actividad. Los resultados solo se abren después del cierre y con **dos integrantes distintos**; el panel muestra el escrutinio y genera el **acta de escrutinio** para imprimir y firmar.
 
 El programa usa demo-dni.sqlite y election.sqlite separados. No borres ni reinicies una base oficial para cambiar configuración o resolver errores.
 Las tarjetas y el respaldo se escriben antes de confirmar la carga: ante un fallo, verifica la transacción y los archivos; no distribuyas tarjetas de una carga fallida.

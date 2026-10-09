@@ -9,7 +9,8 @@ export function openDB(path){
  CREATE TABLE IF NOT EXISTS participation(code_hash TEXT NOT NULL REFERENCES voters(code_hash),election TEXT NOT NULL,PRIMARY KEY(code_hash,election));
  CREATE TABLE IF NOT EXISTS signatures(code_hash TEXT NOT NULL,election TEXT NOT NULL,payload TEXT NOT NULL,checksum TEXT NOT NULL,PRIMARY KEY(code_hash,election),FOREIGN KEY(code_hash,election) REFERENCES participation(code_hash,election));
  CREATE TABLE IF NOT EXISTS ballots(id TEXT PRIMARY KEY,election TEXT NOT NULL,selection TEXT NOT NULL);
- CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,event TEXT NOT NULL,time TEXT NOT NULL);`);
+ CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,event TEXT NOT NULL,time TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS board(id TEXT PRIMARY KEY,name TEXT NOT NULL,role TEXT NOT NULL,key_hash TEXT NOT NULL);`);
  return db;
 }
 export function vote(db,config,code,election,selection,now=Date.now()){
