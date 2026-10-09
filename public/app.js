@@ -43,12 +43,12 @@ $('#admin').onclick=async()=>{
 function renderAdmin(report,key){
  notice();content.innerHTML='<div class="admin-heading"><div><div class="eyebrow">JUNTA ELECTORAL · 2026–2028</div><h2>Control de participación</h2><p>Actualizado: '+esc(new Date().toLocaleTimeString('es-PE',{timeZone:'America/Lima'}))+' · Hora de Perú</p></div><div class="actions"><button id="refresh-admin">Actualizar</button><button id="exit-admin">Salir del panel</button></div></div>'+
  (report.demo?'<p class="admin-demo">Padrón de demostración: el DNI 12345678 es la cuenta de prueba. Los trabajadores reales aparecerán al cargar el padrón.</p>':'')+
- '<div class="admin-stats">'+report.elections.map(e=>{const pct=e.eligible?Math.round(100*e.participation/e.eligible):0;return '<article class="admin-stat"><h3>'+esc(e.title)+'</h3><div class="admin-number">'+pct+'<small>% de participación</small></div><progress max="100" value="'+pct+'" aria-label="Porcentaje de participación"></progress><div class="stat-details"><span><b>'+e.participation+'</b> Ya votaron</span><span><b>'+(e.eligible-e.participation)+'</b> Pendientes</span><span><b>'+e.eligible+'</b> Habilitados</span></div></article>';}).join('')+'</div>'+
- '<div class="admin-toolbar"><h3>Padrón y estado de participación</h3><button id="export-participation">Descargar CSV</button></div><div class="admin-filters"><label>Buscar por DNI<input id="worker-search" type="search" placeholder="DNI"></label><label>Mostrar<select id="worker-filter"><option value="all">Todos</option><option value="pending">Con votaciones pendientes</option><option value="done">Participación completa</option></select></label></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>DNI</th>'+report.elections.map(e=>'<th>'+esc(e.title)+'</th>').join('')+'</tr></thead><tbody id="worker-rows"></tbody></table></div><p class="muted">Solo se muestra si participó. No se relaciona a los trabajadores con las papeletas.</p>'+
+ '<div class="admin-stats">'+report.elections.map(e=>{const pct=e.eligible?Math.round(100*e.participation/e.eligible):0;return '<article class="admin-stat"><h3>'+esc(e.title)+'</h3><div class="admin-number">'+pct+'<small>% de participación</small></div><progress max="100" value="'+pct+'" aria-label="Porcentaje de participación"></progress><div class="stat-details"><span><b>'+e.participation+'</b> Ya votaron</span><span><b>'+(e.eligible-e.participation)+'</b> Falta votar</span><span><b>'+e.eligible+'</b> Habilitados</span></div></article>';}).join('')+'</div>'+
+ '<div class="admin-toolbar"><h3>¿Quién ya votó?</h3><button id="export-participation">Descargar CSV</button></div><div class="admin-filters"><label>Buscar por DNI<input id="worker-search" type="search" placeholder="DNI"></label><label>Mostrar<select id="worker-filter"><option value="all">Todos</option><option value="pending">Con votaciones pendientes</option><option value="done">Participación completa</option></select></label></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>DNI</th>'+report.elections.map(e=>'<th>'+esc(e.title)+'</th>').join('')+'</tr></thead><tbody id="worker-rows"></tbody></table></div><p class="muted">Solo se muestra si participó. No se relaciona a los trabajadores con las papeletas.</p>'+
  '<section class="escrutinio" id="escrutinio"></section>';
  $('.admin-filters').insertAdjacentHTML('beforeend','<label>Comité<select id="committee-filter"><option value="all">Ambos comités</option>'+report.elections.map(e=>'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>').join('')+'</select></label>');
  enhancePanel(report);signatureAdmin(report,key);
- const state=(v,id)=>!v.eligible.includes(id)?'No habilitado':v.voted.includes(id)?'Ya votó':'Pendiente';
+ const state=(v,id)=>!v.eligible.includes(id)?'No le corresponde':v.voted.includes(id)?'Ya votó':'Falta votar';
  function rows(){const query=$('#worker-search').value.trim().toLocaleLowerCase(),filter=$('#worker-filter').value;const shown=report.voters.filter(v=>v.employee.toLocaleLowerCase().includes(query)).filter(v=>{const committee=$('#committee-filter').value;if(committee!=='all'&&!v.eligible.includes(committee))return false;const pending=committee==='all'?v.eligible.some(id=>!v.voted.includes(id)):!v.voted.includes(committee);return filter==='all'||(filter==='pending'?pending:!pending);});$('#worker-rows').innerHTML=shown.map(v=>'<tr><td><strong>'+esc(v.employee)+'</strong></td>'+report.elections.map(e=>'<td><span class="participation-pill '+(state(v,e.id)==='Ya votó'?'done':'pending')+'">'+esc(state(v,e.id))+'</span></td>').join('')+'</tr>').join('')||'<tr><td colspan="'+(report.elections.length+1)+'">No hay trabajadores que coincidan con el filtro.</td></tr>';}
  $('#worker-search').oninput=rows;$('#worker-filter').onchange=()=>{rows();document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===$('#worker-filter').value)));};$('#committee-filter').onchange=rows;rows();
  $('#exit-admin').onclick=()=>{key='';login();};
@@ -68,7 +68,7 @@ function enhancePanel(report){
   card.insertAdjacentHTML('beforeend','<button class="inspect-committee" data-committee="'+esc(e.id)+'">Ver participación de este comité <span>→</span></button>');
  });
  const completed=report.voters.filter(v=>v.eligible.length&&v.eligible.every(id=>v.voted.includes(id))).length;
- $('.admin-filters').insertAdjacentHTML('beforebegin','<div class="quick-filters" aria-label="Filtros rápidos"><button data-filter="all" aria-pressed="true">Todos <b>'+report.voters.length+'</b></button><button data-filter="done" aria-pressed="false">Completaron <b>'+completed+'</b></button><button data-filter="pending" aria-pressed="false">Pendientes <b>'+(report.voters.length-completed)+'</b></button></div>');
+ $('.admin-filters').insertAdjacentHTML('beforebegin','<div class="quick-filters" aria-label="Filtros rápidos"><button data-filter="all" aria-pressed="true">Todos <b>'+report.voters.length+'</b></button><button data-filter="done" aria-pressed="false">Votaron en todo <b>'+completed+'</b></button><button data-filter="pending" aria-pressed="false">Les falta votar <b>'+(report.voters.length-completed)+'</b></button></div>');
  document.querySelectorAll('[data-filter]').forEach(button=>button.onclick=()=>{$('#worker-filter').value=button.dataset.filter;$('#worker-filter').dispatchEvent(new Event('change'));});
  document.querySelectorAll('[data-committee]').forEach(button=>button.onclick=()=>{$('#committee-filter').value=button.dataset.committee;$('#committee-filter').dispatchEvent(new Event('change'));$('.admin-toolbar').scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'});});
 }
@@ -466,4 +466,38 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
    data.elections.map(e=>{const r=e.results;return '<h2>'+esc(e.title)+'</h2><table><thead><tr><th>N.º</th><th>Candidatura</th><th>Votos</th></tr></thead><tbody>'+r.candidates.map(c=>'<tr><td>'+String(c.number||'').padStart(2,'0')+'</td><td>'+esc(c.name)+'</td><td class="n">'+c.votes+'</td></tr>').join('')+'<tr><td></td><td>Votos en blanco</td><td class="n">'+r.blank+'</td></tr><tr><th></th><th>Total de votos emitidos</th><th class="n">'+r.total+'</th></tr></tbody></table><p>Trabajadores habilitados: '+e.eligible+' · Participación: '+e.participation+' ('+pct(e.participation,e.eligible)+'%).</p>';}).join('')+
    '<h2>Observaciones</h2><div class="obs"></div><p>Firman en señal de conformidad:</p><div class="f">'+(data.board||[]).map(m=>'<div>'+esc(m.name)+'<br>'+esc(m.role)+' de la junta electoral</div>').join('')+'</div></html>';
  }
+})();
+
+
+/* ===== Panel de la junta ordenado en pestañas ===== */
+(()=>{
+ const baseAdmin3=renderAdmin;
+ renderAdmin=function(report,key){
+  const keepTab=document.querySelector('.jtabs [aria-selected=true]');const prev=keepTab?keepTab.dataset.tab:'resumen';
+  baseAdmin3(report,key);
+  const pick=sel=>[...content.querySelectorAll(sel)];
+  const groups={
+   resumen:{label:'Resumen',help:'Cuántas personas ya votaron en cada comité. Se actualiza con el botón "Actualizar".',els:pick('.admin-demo,.admin-stats')},
+   votantes:{label:'¿Quién ya votó?',help:'Busca un DNI o usa los botones para ver a quién le falta votar. Nunca se muestra por quién votó cada persona.',els:pick('.admin-toolbar,.quick-filters,.admin-filters,.admin-table-wrap,.admin-table-wrap+p.muted').filter(el=>!el.closest('.signature-register'))},
+   firmas:{label:'Constancias firmadas',help:'Trabajadores que firmaron su constancia de participación. Puedes ver cada una.',els:pick('.signature-register')},
+   resultados:{label:'Resultados',help:'Se abren después del cierre con dos integrantes de la junta. Desde aquí se descarga el acta.',els:pick('#escrutinio')},
+   actividad:{label:'Actividad',help:'Quién ingresó al panel y cuándo, y otros eventos del sistema.',els:pick('.activity')}
+  };
+  const nav=document.createElement('div');nav.className='jtabs';nav.setAttribute('role','tablist');
+  const holder=document.createElement('div');holder.className='jpanels';
+  for(const [id,g] of Object.entries(groups)){
+   const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.dataset.tab=id;b.textContent=g.label;nav.append(b);
+   const panel=document.createElement('section');panel.className='jpanel';panel.dataset.tab=id;panel.setAttribute('role','tabpanel');
+   panel.innerHTML='<p class="jhelp">'+esc(g.help)+'</p>';g.els.forEach(el=>panel.append(el));holder.append(panel);
+  }
+  pick('.panel-banner').forEach(b=>b.remove());
+  const head=content.querySelector('.admin-heading');head.after(nav);nav.after(holder);
+  const act=content.querySelector('.activity');if(act)act.open=true;
+  pick('.inspect-committee').forEach(b=>b.remove());
+  const committee=$('#committee-filter');if(committee){committee.value='all';committee.closest('label').hidden=true;}
+  const show=$('#worker-filter');if(show)show.closest('label').hidden=true;
+  const select=id=>{nav.querySelectorAll('[role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));holder.querySelectorAll('.jpanel').forEach(p=>p.hidden=p.dataset.tab!==id);};
+  nav.querySelectorAll('[role=tab]').forEach(b=>b.onclick=()=>select(b.dataset.tab));
+  select(groups[prev]?prev:'resumen');
+ };
 })();
