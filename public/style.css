@@ -427,3 +427,5 @@ body,button,input,select{font-family:var(--sans)}
 
 /* Fotografía de portada proporcionada por IMAGE & HEALTH. */
 .hero-photo>.hero-slide{object-position:center 44%}.hero-photo:after{background:linear-gradient(90deg,rgba(23,15,24,.83),rgba(23,15,24,.4) 62%,rgba(23,15,24,.16))}@media(max-width:600px){.hero-photo>.hero-slide{object-position:60% center}}
+
+.hero-photo>.hero-slide.is-active{object-position:center top;animation:none;transform:none}.lab-brand{display:inline-block;background:#fffffff2;color:#861079;padding:12px 18px;border-radius:5px;font-size:12px;letter-spacing:1.4px;margin-bottom:24px}.lab-brand strong{display:block;font-family:Georgia,serif;font-size:25px;letter-spacing:.5px;margin-top:4px}@media(max-width:600px){.lab-brand{font-size:10px}.lab-brand strong{font-size:22px}.hero-photo>.hero-slide.is-active{object-position:42% top}}
