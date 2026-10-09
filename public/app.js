@@ -266,7 +266,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  const io=new IntersectionObserver(es=>{for(const e of es){if(!e.isIntersecting)continue;const el=e.target;el.classList.add('in');io.unobserve(el);
   const n=el.querySelector('[data-count]');if(n&&!still){const end=+n.dataset.count,suf=n.dataset.suffix||'',t0=performance.now();(function run(t){const k=Math.min(1,(t-t0)/1400);n.textContent=Math.round(end*(1-Math.pow(1-k,4)))+suf;if(k<1)requestAnimationFrame(run);})(t0);}}},{threshold:.2});
  function watch(sel){document.querySelectorAll(sel).forEach(el=>{if(!still)el.classList.add('rv');io.observe(el);});}
- watch('.stat');watch('.howto-steps li');
+ watch('.howto-steps li');
  const steps=document.querySelector('.howto-steps');if(steps)io.observe(steps);
 
  /* Iniciales para la junta */

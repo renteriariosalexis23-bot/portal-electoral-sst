@@ -269,16 +269,6 @@ body,button,input,select{font-family:var(--sans)}
 .hero-dot.is-active i:after{animation:fill 7s linear forwards}
 @keyframes fill{to{transform:scaleX(1)}}
 
-/* Cifras */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--plum);color:#fff;margin:0 calc(50% - 50vw);padding:54px max(5%,calc((100vw - 1204px)/2));gap:0;position:relative;overflow:hidden}
-.stats:before{content:"";position:absolute;width:520px;height:520px;right:-120px;top:-260px;border-radius:50%;background:radial-gradient(circle,#86107988,transparent 65%);animation:float 12s ease-in-out infinite alternate}
-@keyframes float{to{transform:translate(-120px,80px)}}
-.stat{position:relative;padding:0 26px;border-left:1px solid #ffffff26}
-.stat:first-child{border-left:0;padding-left:0}
-.stat strong{display:block;font:300 clamp(46px,5vw,72px)/1 var(--serif);font-variant-numeric:tabular-nums;color:#fff}
-.stat span{display:block;margin-top:12px;font-size:13px;color:#e9d6e5;letter-spacing:.04em}
-@media(max-width:800px){.stats{grid-template-columns:1fr 1fr;row-gap:34px}.stat:nth-child(3){border-left:0;padding-left:0}}
-
 /* Cómo votar */
 .howto{padding:80px 0 40px}
 .howto-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;position:relative;margin-top:36px}
@@ -314,13 +304,12 @@ body,button,input,select{font-family:var(--sans)}
 
 /* Transición entre pantallas del panel */
 #content{transition:opacity .25s}
-@media(prefers-reduced-motion:reduce){.hero-photo>.hero-slide{transition:none;animation:none!important}.hero-dot.is-active i:after{animation:none;transform:scaleX(1)}.stats:before,.cands-track{animation:none}.cands-track{flex-wrap:wrap;width:auto}.rv{opacity:1;transform:none;transition:none}}
+@media(prefers-reduced-motion:reduce){.hero-photo>.hero-slide{transition:none;animation:none!important}.hero-dot.is-active i:after{animation:none;transform:scaleX(1)}.cands-track{animation:none}.cands-track{flex-wrap:wrap;width:auto}.rv{opacity:1;transform:none;transition:none}}
 .howto{padding:90px max(5%,calc((100vw - 1150px)/2)) 50px}
-.stats{margin:0;padding:54px max(5%,calc((100vw - 1150px)/2))}
 .cands{padding:80px 0 70px;background:#fbf8fa}
 .cands .section-heading{padding:0 max(5%,calc((100vw - 1150px)/2))}
 .cands-track{padding-left:max(5%,calc((100vw - 1150px)/2))}
-@media(max-width:600px){.howto{padding:50px 20px 30px}.stats{padding:40px 20px}.cands{padding:50px 0}.cands .section-heading{padding:0 20px}}
+@media(max-width:600px){.howto{padding:50px 20px 30px}.cands{padding:50px 0}.cands .section-heading{padding:0 20px}}
 
 /* ===== Guía interactiva de los comités ===== */
 .explainer{--tone:#2f7d79;--tone-soft:#e3f1ef;--tone-ink:#1d5552;margin-top:10px}
