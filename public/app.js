@@ -205,3 +205,49 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
   });
  };
 })();
+
+/* ===== Pantalla "Tus elecciones", pasos y sesión ===== */
+(()=>{
+ const lock='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm-2 3.5a2 2 0 1 1 4 0V6H6V4.5Z"/></svg>';
+ const meta={sst:['01 · PREVENCIÓN','/salud.jpg'],hs:['02 · RESPETO','/equipo.jpg']};
+ const steps=[...document.querySelectorAll('.access-info li')];
+ steps.forEach((li,i)=>li.firstElementChild.dataset.n='0'+(i+1));
+ const chip=document.createElement('div');chip.className='session-chip';chip.setAttribute('role','timer');
+ document.querySelector('.access-info').append(chip);
+ let started=0;
+ function setSteps(level){steps.forEach((li,i)=>{const done=i<level,active=i===level&&level<steps.length;li.classList.toggle('done',done);li.classList.toggle('active',active);li.firstElementChild.textContent=done?'✓':li.firstElementChild.dataset.n;});}
+ setInterval(()=>{if(!started){chip.classList.remove('on');return;}const left=Math.max(0,1800-Math.floor((Date.now()-started)/1000));chip.classList.add('on');chip.innerHTML='Sesión activa · expira en <b>'+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0')+'</b>';},1000);
+
+ const baseLogin2=login;
+ login=function(){baseLogin2();started=0;chip.classList.remove('on');setSteps(0);};
+
+ const baseDash2=dashboard;
+ dashboard=async function(){
+  await baseDash2();
+  if(!started)started=Date.now();
+  const cards=[...content.querySelectorAll('.card')].filter(c=>c.querySelector('[data-election]'));
+  const total=cards.length,done=cards.filter(c=>status.voted.includes(c.querySelector('[data-election]').dataset.election)).length;
+  setSteps(done===total&&total?3:done?2:1);
+  const first=content.querySelector('.card');
+  if(first)first.insertAdjacentHTML('beforebegin','<div class="dash-summary"><svg viewBox="0 0 66 66" role="img" aria-label="'+done+' de '+total+' cédulas completadas"><circle class="t" cx="33" cy="33" r="27"/><circle class="v" cx="33" cy="33" r="27" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 33 33)"/><text x="33" y="39" text-anchor="middle">'+done+'/'+total+'</text></svg><div><strong>'+(done===total&&total?'¡Completaste todas tus cédulas!':done+' de '+total+' cédulas completadas')+'</strong><span>'+(done===total&&total?'Gracias por participar. Cierra tu sesión al terminar.':'Te faltan '+(total-done)+'. Cada comité se vota por separado.')+'</span></div></div>');
+  const ring=content.querySelector('.dash-summary .v');
+  if(ring)requestAnimationFrame(()=>requestAnimationFrame(()=>ring.setAttribute('stroke-dasharray',(total?100*done/total:0)+' 100')));
+  cards.forEach(card=>{
+   const btn=card.querySelector('[data-election]'),id=btn.dataset.election,voted=status.voted.includes(id),g=committeeGuides[id],[tag,img]=meta[id]||['',''];
+   card.classList.add('dash-card');
+   const body=document.createElement('div');body.className='dash-body';
+   while(card.firstChild)body.append(card.firstChild);
+   const h=body.querySelector('h3'),p=body.querySelector('p');
+   if(p)p.remove();
+   h.after(Object.assign(document.createElement('span'),{className:'chip '+(voted?'done':'pending'),textContent:voted?'Participación registrada':'Pendiente de participación'}));
+   if(g){const b=document.createElement('p');b.className='blurb';b.textContent=g.what;body.querySelector('.chip').after(b);}
+   const wrap=document.createElement('div');wrap.className='actions';wrap.append(btn,...body.querySelectorAll('.signature-action'));body.append(wrap);
+   btn.textContent=voted?'Cédula enviada ✓':'Abrir cédula →';
+   const photo=document.createElement('div');photo.className='dash-photo';photo.innerHTML='<img src="'+img+'" alt=""><span>'+tag+'</span>';
+   card.append(photo,body);
+  });
+  const out=content.querySelector('#logout');
+  if(out)out.insertAdjacentHTML('beforebegin','<p class="secret-note">'+lock+'<span>Tu voto es secreto: el sistema registra que participaste, no por quién votaste.</span></p>');
+ };
+ setSteps(0);
+})();

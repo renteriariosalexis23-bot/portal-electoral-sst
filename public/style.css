@@ -199,3 +199,44 @@ input[type=password]:focus,input[type=text]:focus{outline:0;border-color:var(--b
 button{position:relative;overflow:hidden}
 .reveal-item{transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)!important}
 @media(prefers-reduced-motion:reduce){.hero-copy>*,.hero-photo>img,.hero h1 em,.eyebrow>span,.countdown,.success-seal,.success-seal:before,.vote-steps .current>span{animation:none!important}.candidate:hover,.committee-picker>button:hover,.board-member:hover,.admin-stat:hover{transform:none!important}.confetti{display:none}}
+
+/* ===== Pantalla "Tus elecciones" y columna de pasos ===== */
+.access-panel{border-top:3px solid var(--brand)}
+.access-info li{align-items:flex-start}
+.access-info li>span{display:grid;place-items:center;width:28px;height:28px;padding:0;border-radius:50%;border:1px solid #deceda;background:#fff;color:#9b4b8f;font-size:11px;font-weight:700;flex:none;transition:background .3s,color .3s,border-color .3s,transform .3s}
+.access-info li.active>span{border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 5px #8610791a;animation:pulse 1.8s infinite}
+.access-info li.done>span{background:var(--brand);border-color:var(--brand);color:#fff;transform:scale(1.05)}
+.access-info li.done strong{color:var(--brand)}
+.session-chip{display:none;align-items:center;gap:10px;margin-top:22px;padding:11px 16px;border-radius:99px;background:#f6eef5;color:#632055;font-size:12px;font-weight:600;width:max-content;max-width:100%}
+.session-chip.on{display:flex}
+.session-chip:before{content:"";width:9px;height:9px;border-radius:50%;background:#2f9e6b;animation:pulse 1.6s infinite}
+.session-chip b{font-variant-numeric:tabular-nums}
+.dash-summary{display:flex;align-items:center;gap:18px;margin:20px 0 6px;padding:18px 20px;border-radius:14px;background:linear-gradient(120deg,#fbeefa,#f3e4f1);border:1px solid #ecd3e7}
+.dash-summary svg{width:66px;height:66px;flex:none}
+.dash-summary circle{fill:none;stroke-width:8}
+.dash-summary .t{stroke:#fff}
+.dash-summary .v{stroke:var(--brand);stroke-linecap:round;transition:stroke-dasharray 1s cubic-bezier(.2,.7,.2,1)}
+.dash-summary text{font-size:19px;font-weight:700;fill:#632055}
+.dash-summary strong{display:block;font-size:16px;color:#46133f}
+.dash-summary span{display:block;font-size:13px;color:#7a5f76;margin-top:3px}
+.dash-card{display:grid!important;grid-template-columns:190px 1fr;padding:0!important;overflow:hidden;border-radius:14px!important;margin:16px 0!important;transition:transform .25s,box-shadow .25s,border-color .25s}
+.dash-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px #86107920;border-color:#d9b5d2}
+.dash-photo{position:relative;min-height:190px;overflow:hidden;background:#33232e}
+.dash-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.dash-card:hover .dash-photo img{transform:scale(1.1)}
+.dash-photo:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,#271925cc)}
+.dash-photo span{position:absolute;left:14px;bottom:12px;z-index:1;color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.dash-body{padding:20px 22px}
+.dash-body h3{margin:0 0 6px!important;font-size:19px!important;line-height:1.3}
+.dash-body .blurb{font-size:13px!important;line-height:1.55;margin:0 0 14px!important;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;margin-bottom:12px}
+.chip:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.chip.pending{background:#fbf1d9;color:#8a6516}
+.chip.pending:before{animation:pulse 1.6s infinite}
+.chip.done{background:#def3e8;color:#1e7a4d}
+.dash-body .actions{margin-top:4px}
+.dash-body button{border-radius:10px}
+.secret-note{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border-radius:10px;background:#f7f3f6;font-size:12px!important;color:#6a5d68!important;line-height:1.5}
+.secret-note svg{width:16px;height:16px;flex:none;fill:var(--brand)}
+@media(max-width:600px){.dash-card{grid-template-columns:1fr}.dash-photo{min-height:120px}}
+.dash-body .actions button{margin:0!important}
