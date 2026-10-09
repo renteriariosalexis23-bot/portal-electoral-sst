@@ -1,23 +1,38 @@
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {randomBytes} from 'node:crypto';
 import {openDB,hash} from './core.mjs';
+import {loadPadron,newCode,credential} from './padron.mjs';
+import {cardsHtml} from './tarjetas.mjs';
 const cfg=JSON.parse(readFileSync(new URL('./config.json',import.meta.url)));
+const [file,flag]=process.argv.slice(2),check=flag==='--revisar';
+if(!file)throw Error('Uso: node import-padron.mjs padron.xlsx            (carga y genera credenciales)\n     node import-padron.mjs padron.xlsx --revisar  (solo revisa el Excel)');
+const {rows,errors}=loadPadron(file,cfg.elections);
+if(errors.length){console.error('El padrón tiene '+errors.length+' error(es). No se generó ningún código:\n - '+errors.join('\n - '));process.exit(1);}
+const summary=rows=>cfg.elections.map(e=>rows.filter(r=>r.eligible.includes(e.id)).length+' en '+e.id.toUpperCase()).join(', ');
+if(check){console.log('Padrón correcto: '+rows.length+' trabajadores ('+summary(rows)+'). No se guardó nada.');process.exit(0);}
 if(cfg.mode!=='production'||!cfg.approved)throw Error('Primero aprueba y configura el modo production.');
-if(Date.now()>=Date.parse(cfg.opens))throw Error('El padrón se cierra al inicio de la elección.');
-if(!process.argv[2]||!process.argv[3])throw Error('Uso: node import-padron.mjs padron.json credenciales.json');
-const rows=JSON.parse(readFileSync(process.argv[2]));if(!Array.isArray(rows)||!rows.length)throw Error('Padrón vacío.');
-for(const r of rows)if(typeof r.employee!=='string'||!r.employee.trim()||!Array.isArray(r.eligible)||!r.eligible.length||r.eligible.some(id=>!cfg.elections.some(e=>e.id===id)))throw Error('Fila inválida.');
+if(Date.now()>=Date.parse(cfg.opens))throw Error('El padrón se cierra al inicio de la elección. Para un código perdido usa reemplazar-codigo.mjs.');
 mkdirSync(new URL('./data/',import.meta.url),{recursive:true});
 const db=openDB(fileURLToPath(new URL('./data/election.sqlite',import.meta.url)));
 const saved=db.prepare('SELECT value FROM config WHERE id=1').get();
 if(saved&&saved.value!==JSON.stringify(cfg))throw Error('La configuración no coincide.');
-const out=rows.map(r=>({...r,code:randomBytes(24).toString('base64url')}));
+const exists=db.prepare('SELECT 1 FROM voters WHERE employee=?');
+const fresh=rows.filter(r=>!exists.get(r.employee)),skipped=rows.length-fresh.length;
+if(!fresh.length){console.log('No hay trabajadores nuevos: los '+skipped+' del Excel ya tienen código.');process.exit(0);}
+const out=fresh.map(r=>({...r,code:newCode()}));
+const stamp=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+const dir=new URL('./credenciales/',import.meta.url);mkdirSync(dir,{recursive:true,mode:0o700});
+const jsonFile=new URL('credenciales-'+stamp+'.json',dir),htmlFile=new URL('tarjetas-'+stamp+'.html',dir);
 db.exec('BEGIN IMMEDIATE');
 try{
  db.prepare('INSERT OR IGNORE INTO config VALUES(1,?)').run(JSON.stringify(cfg));
- for(const r of out)db.prepare('INSERT INTO voters VALUES(?,?,?)').run(hash(r.code),r.employee,JSON.stringify(r.eligible));
- writeFileSync(process.argv[3],JSON.stringify(out,null,2),{flag:'wx',mode:0o600});
- db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('PADRON_IMPORT',new Date().toISOString());
- db.exec('COMMIT');console.log('Padrón cargado. Entrega cada credencial individualmente y protege el archivo de salida.');
+ const ins=db.prepare('INSERT INTO voters VALUES(?,?,?)');
+ for(const r of out)ins.run(hash(credential(r.employee,r.code)),r.employee,JSON.stringify(r.eligible));
+ writeFileSync(jsonFile,JSON.stringify(out.map(({employee,name,eligible,code})=>({dni:employee,name,eligible,code})),null,2),{flag:'wx',mode:0o600});
+ writeFileSync(htmlFile,cardsHtml(cfg,out,fileURLToPath(new URL('./public/logo.png',import.meta.url))),{flag:'wx',mode:0o600});
+ db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('PADRON_IMPORT '+out.length,new Date().toISOString());
+ db.exec('COMMIT');
 }catch(e){db.exec('ROLLBACK');throw e;}finally{db.close();}
+console.log('Padrón cargado: '+out.length+' códigos nuevos ('+summary(out)+')'+(skipped?'; '+skipped+' ya tenían código y no se tocaron':'')+'.');
+console.log('Tarjetas para imprimir: '+fileURLToPath(htmlFile));
+console.log('Protege la carpeta credenciales: contiene los códigos. No la subas a GitHub.');

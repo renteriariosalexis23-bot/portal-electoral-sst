@@ -3,3 +3,7 @@ data/*.sqlite-*
 credenciales*.json
 padron.json
 node_modules/
+credenciales/
+padron*.xlsx
+padron*.csv
+!padron-plantilla.xlsx

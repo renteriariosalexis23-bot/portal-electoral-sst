@@ -18,17 +18,17 @@ test('HTTP: autenticación, emisión, duplicado, panel protegido y cierre de ses
  const {fileURLToPath}=await import('node:url');
  const {spawn}=await import('node:child_process');
  const dir=mkdtempSync(join(tmpdir(),'ih-election-test-'));
- for(const name of ['server.mjs','core.mjs','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ for(const name of ['server.mjs','core.mjs','padron.mjs','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
  const key='test-only-key-abcdefghijklmnopqrstuvwxyz';
  const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18787',ADMIN_KEY:key},stdio:['ignore','pipe','pipe']});
  try{
   await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Server timeout')),10000);child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:')){clearTimeout(timeout);resolve();}});child.on('error',reject);child.on('exit',code=>{clearTimeout(timeout);reject(Error('Server exited '+code));});});
   const api=async(path,body={},token='')=>{const r=await fetch('http://127.0.0.1:18787/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
   assert.equal((await api('status')).status,401);
-  assert.equal((await api('login',{code:'invalid'})).status,401);
-  assert.equal((await api('login',{code:'DEMO-2026'})).status,403);
-  assert.equal((await api('login',{code:'DEMO-2026',reviewed:['sst']})).status,403);
-  const auth=await api('login',{code:'DEMO-2026',reviewed:['sst','hs']});assert.equal(auth.status,200);const token=auth.data.token;
+  assert.equal((await api('login',{dni:'12345678',code:'invalid'})).status,401);
+  assert.equal((await api('login',{dni:'12345678',code:'demo2026'})).status,403);
+  assert.equal((await api('login',{dni:'12345678',code:'DEMO-2026',reviewed:['sst']})).status,403);
+  const auth=await api('login',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']});assert.equal(auth.status,200);const token=auth.data.token;
   assert.equal((await api('vote',{election:'sst',selection:['s1','s2']},token)).status,400);
   assert.deepEqual((await api('status',{},token)).data.voted,[]);
   assert.equal((await api('vote',{election:'sst',selection:['s1']},token)).status,200);
@@ -39,16 +39,16 @@ assert.equal((await api('vote',{election:'hs',selection:['h1']},token)).status,2
   assert.equal((await api('vote',{election:'hs',selection:['h2']},token)).status,400);
   assert.deepEqual((await api('status',{},token)).data.voted.sort(),['hs','sst']);
   assert.equal((await api('admin',{key:'wrong'})).status,401);
-  const report=(await api('admin',{key})).data;assert.equal(report.elections[0].participation,1);assert.deepEqual(report.voters,[{employee:'PERSONA-DEMO',signed:[],eligible:['sst','hs'],voted:['hs','sst']}].map(v=>({...v,voted:report.voters[0].voted})));assert.deepEqual([...report.voters[0].voted].sort(),['hs','sst']);assert.equal(JSON.stringify(report.voters).includes('selection'),false);assert.equal(JSON.stringify(report.voters).includes('code_hash'),false);
+  const report=(await api('admin',{key})).data;assert.equal(report.elections[0].participation,1);assert.deepEqual(report.voters,[{employee:'12345678',signed:[],eligible:['sst','hs'],voted:['hs','sst']}].map(v=>({...v,voted:report.voters[0].voted})));assert.deepEqual([...report.voters[0].voted].sort(),['hs','sst']);assert.equal(JSON.stringify(report.voters).includes('selection'),false);assert.equal(JSON.stringify(report.voters).includes('code_hash'),false);
   if(Date.now()<Date.parse('2026-11-02T16:00:00-05:00'))assert.equal(report.elections[0].results,null);
   const signature={election:'sst',name:'Persona de prueba',accepted:true,strokes:[[[0.1,0.1],[0.8,0.7]]]};
 assert.equal((await api('sign',{...signature,accepted:false},token)).status,400);
 assert.equal((await api('sign',{...signature,strokes:[]},token)).status,400);
-const signed=await api('sign',signature,token);assert.equal(signed.status,200);assert.equal(signed.data.employee,'PERSONA-DEMO');assert.equal(signed.data.selection,undefined);
+const signed=await api('sign',signature,token);assert.equal(signed.status,200);assert.equal(signed.data.employee,'12345678');assert.equal(signed.data.selection,undefined);
 assert.equal((await api('sign',signature,token)).status,400);
 assert.deepEqual((await api('status',{},token)).data.signed,['sst']);
-assert.equal((await api('admin-receipt',{key:'wrong',employee:'PERSONA-DEMO',election:'sst'})).status,401);
-const receipt=(await api('admin-receipt',{key,employee:'PERSONA-DEMO',election:'sst'})).data;assert.equal(receipt.id,signed.data.id);
+assert.equal((await api('admin-receipt',{key:'wrong',employee:'12345678',election:'sst'})).status,401);
+const receipt=(await api('admin-receipt',{key,employee:'12345678',election:'sst'})).data;assert.equal(receipt.id,signed.data.id);
 assert.equal((await api('receipt',{election:'sst'},token)).data.id,receipt.id);
 await api('logout',{},token);assert.equal((await api('status',{},token)).status,401);
  }finally{
@@ -57,3 +57,47 @@ await api('logout',{},token);assert.equal((await api('status',{},token)).status,
 });
 
 test('cédula pendiente rechaza incluso voto en blanco',()=>{const db=setup();const pending={...cfg,elections:cfg.elections.map(e=>({...e,ready:false}))};assert.throws(()=>vote(db,pending,'secret','sst',[],now),/pendiente/);assert.equal(db.prepare('SELECT COUNT(*) n FROM ballots').get().n,0);db.close();});
+test('padrón: lee Excel, valida DNI, columnas y duplicados',async()=>{
+ const {writeXlsx,readXlsx,parsePadron,newCode,normalizeCode,credential,CODE_ALPHABET}=await import('./padron.mjs');
+ const el=[{id:'sst'},{id:'hs'}];
+ const ok=parsePadron(readXlsx(writeXlsx([['DNI','Nombre','SST','HS'],['45781236','María','SÍ','sí'],['07012345','José','x','NO']])),el);
+ assert.deepEqual(ok.errors,[]);assert.deepEqual(ok.rows.map(r=>[r.employee,r.eligible]),[['45781236',['sst','hs']],['07012345',['sst']]]);
+ const bad=parsePadron([['DNI','SST','HS'],['4578123','SI','SI'],['45781236','SI','SI'],['45781236','SI','SI'],['11111111','NO','NO'],['22222222','tal vez','SI'],[1234567,'SI','SI']],el);
+ assert.equal(bad.errors.length,4);assert.match(bad.errors.join('\n'),/Fila 2: .*8 dígitos[\s\S]*Fila 4: .*repetido[\s\S]*Fila 5: .*ningún comité[\s\S]*Fila 6: .*SÍ o NO/);
+ assert.equal(bad.rows.at(-1).employee,'01234567');
+ assert.match(parsePadron([['NOMBRE','SST']],el).errors.join(),/Falta la columna DNI/);
+ const c=newCode();assert.match(c,/^[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/);assert.equal(CODE_ALPHABET.includes('O')||CODE_ALPHABET.includes('I')||CODE_ALPHABET.includes('L')||CODE_ALPHABET.includes('0')||CODE_ALPHABET.includes('1'),false);
+ assert.equal(normalizeCode(' k7qm 4xpa '),'K7QM4XPA');assert.equal(credential('45781236','k7qm-4xpa'),credential('45781236','K7QM4XPA'));assert.notEqual(credential('45781236','K7QM4XPA'),credential('45781237','K7QM4XPA'));
+});
+
+test('carga del padrón desde Excel, ingreso con DNI + código y reemplazo de código',async()=>{
+ const {mkdtempSync,cpSync,rmSync,writeFileSync,readFileSync,readdirSync}=await import('node:fs');
+ const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {execFileSync,spawn}=await import('node:child_process');
+ const {writeXlsx}=await import('./padron.mjs');
+ const dir=mkdtempSync(join(tmpdir(),'ih-padron-test-'));
+ for(const name of ['server.mjs','core.mjs','padron.mjs','tarjetas.mjs','import-padron.mjs','reemplazar-codigo.mjs','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ const cfg=JSON.parse(readFileSync(new URL('./config.json',import.meta.url)));
+ writeFileSync(join(dir,'config.json'),JSON.stringify({...cfg,mode:'production',approved:true,opens:'2099-01-01T09:00:00-05:00',closes:'2099-01-01T16:00:00-05:00'}));
+ writeFileSync(join(dir,'padron.xlsx'),writeXlsx([['DNI','NOMBRE','SST','HS'],['45781236','María Pérez','SI','SI'],['70123459','José Quispe','SI','NO']]));
+ const run=(...a)=>execFileSync(process.execPath,a,{cwd:dir,encoding:'utf8'});
+ try{
+  assert.match(run('import-padron.mjs','padron.xlsx','--revisar'),/2 trabajadores \(2 en SST, 1 en HS\)/);
+  assert.match(run('import-padron.mjs','padron.xlsx'),/2 códigos nuevos/);
+  assert.match(run('import-padron.mjs','padron.xlsx'),/No hay trabajadores nuevos/);
+  const files=readdirSync(join(dir,'credenciales'));assert.ok(files.some(f=>f.startsWith('tarjetas-')));
+  const creds=JSON.parse(readFileSync(join(dir,'credenciales',files.find(f=>f.endsWith('.json')))));
+  const maria=creds.find(c=>c.dni==='45781236');assert.match(maria.code,/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  assert.ok(readFileSync(join(dir,'credenciales',files.find(f=>f.startsWith('tarjetas-'))),'utf8').includes(maria.code));
+  const login=async(dni,code)=>{const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18788',ADMIN_KEY:'k'.repeat(40)},stdio:['ignore','pipe','pipe']});
+   try{await new Promise((ok,ko)=>{child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:'))ok();});child.on('exit',c=>ko(Error('exit '+c)));});
+    const r=await fetch('http://127.0.0.1:18788/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dni,code,reviewed:['sst','hs']})});return r.status;}
+   finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;}};
+  assert.equal(await login('45781236',maria.code.toLowerCase().replace('-','')),200);
+  assert.equal(await login('70123459',maria.code),401);
+  run('reemplazar-codigo.mjs','45781236','María Pérez');
+  assert.equal(await login('45781236',maria.code),401);
+  const repl=readdirSync(join(dir,'credenciales')).find(f=>f.startsWith('reemplazo-45781236'));
+  const newCode=readFileSync(join(dir,'credenciales',repl),'utf8').match(/class="code">([A-Z0-9-]+)</)[1];
+  assert.equal(await login('45781236',newCode),200);
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});

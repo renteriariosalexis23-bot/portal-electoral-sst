@@ -4,22 +4,23 @@ import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {openDB,hash,vote,signParticipation} from './core.mjs';
+import {credential,normalizeDni} from './padron.mjs';
 const root=dirname(fileURLToPath(import.meta.url)),cfg=JSON.parse(readFileSync(join(root,'config.json')));
 const demo=cfg.mode==='demo';
 if(!demo&&(!cfg.approved||!process.env.ADMIN_KEY||process.env.ADMIN_KEY.length<32))throw Error('Se requiere configuración aprobada y ADMIN_KEY de 32 caracteres como mínimo.');
 mkdirSync(join(root,'data'),{recursive:true});
-const db=openDB(join(root,'data',demo?'demo-seleccion-unica.sqlite':'election.sqlite'));
+const db=openDB(join(root,'data',demo?'demo-dni.sqlite':'election.sqlite'));
 const saved=db.prepare('SELECT value FROM config WHERE id=1').get();
 if(saved&&saved.value!==JSON.stringify(cfg))throw Error('La configuración cambió después de inicializar la base. Revisa el README antes de continuar.');
 db.prepare('INSERT OR IGNORE INTO config VALUES(1,?)').run(JSON.stringify(cfg));
 const admin=process.env.ADMIN_KEY||randomBytes(32).toString('hex');
-if(demo){db.prepare('INSERT OR IGNORE INTO voters VALUES(?,?,?)').run(hash('DEMO-2026'),'PERSONA-DEMO','["sst","hs"]');console.log('Credencial de prueba: DEMO-2026\nClave de junta para esta sesión: '+admin);}
+if(demo){db.prepare('INSERT OR IGNORE INTO voters VALUES(?,?,?)').run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nClave de junta para esta sesión: '+admin);}
 db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('SERVER_START',new Date().toISOString());
 const sessions=new Map(),attempts=new Map();
 const demoElections=cfg.elections.map(e=>({...e,ready:true,pendingReason:undefined}));
 const clockConfig=demo?{...cfg,elections:demoElections,opens:'2020-01-01T00:00:00Z',closes:'2099-01-01T00:00:00Z'}:cfg;
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
-function guard(key){const v=attempts.get(key);if(v&&v.end>Date.now()&&v.n>=30)throw Error('Demasiados intentos. Espera 15 minutos.');}
+function guard(key,max=30){const v=attempts.get(key);if(v&&v.end>Date.now()&&v.n>=max)throw Error('Demasiados intentos. Espera 15 minutos.');}
 function fail(key){const old=attempts.get(key);const v=old&&old.end>Date.now()?old:{n:0,end:Date.now()+900000};v.n++;attempts.set(key,v);}
 setInterval(()=>{for(const [k,v] of sessions)if(v.expires<Date.now())sessions.delete(k);for(const [k,v] of attempts)if(v.end<Date.now())attempts.delete(k);},60000).unref();
 const server=http.createServer(async(req,res)=>{
@@ -39,9 +40,13 @@ const server=http.createServer(async(req,res)=>{
   const body=JSON.parse(raw);
   if(path==='/api/login'){
    const lk='login:'+req.socket.remoteAddress;guard(lk);
-   if(typeof body.code!=='string'||!db.prepare('SELECT 1 FROM voters WHERE code_hash=?').get(hash(body.code))){fail(lk);return send(401,{error:'Credencial inválida.'});}
+   const dni=normalizeDni(body.dni);
+   if(typeof body.dni!=='string'||typeof body.code!=='string'||!/^\d{8}$/.test(dni)){fail(lk);return send(401,{error:'Escribe tu DNI de 8 dígitos y tu código personal.'});}
+   const dk='dni:'+dni;guard(dk,10);
+   const key=credential(dni,body.code);
+   if(!db.prepare('SELECT 1 FROM voters WHERE code_hash=? AND employee=?').get(hash(key),dni)){fail(lk);fail(dk);return send(401,{error:'DNI o código incorrecto.'});}
    if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
-   const token=randomBytes(32).toString('hex');sessions.set(token,{code:body.code,expires:Date.now()+1800000});return send(200,{token});
+   const token=randomBytes(32).toString('hex');sessions.set(token,{code:key,expires:Date.now()+1800000});return send(200,{token});
   }
   if(path==='/api/admin'||path==='/api/admin-receipt'){
    const ak='admin:'+req.socket.remoteAddress;guard(ak);
