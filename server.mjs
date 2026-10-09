@@ -40,6 +40,7 @@ const server=http.createServer(async(req,res)=>{
   if(path==='/api/login'){
    const lk='login:'+req.socket.remoteAddress;guard(lk);
    if(typeof body.code!=='string'||!db.prepare('SELECT 1 FROM voters WHERE code_hash=?').get(hash(body.code))){fail(lk);return send(401,{error:'Credencial inválida.'});}
+   if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:body.code,expires:Date.now()+1800000});return send(200,{token});
   }
   if(path==='/api/admin'||path==='/api/admin-receipt'){

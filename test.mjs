@@ -26,7 +26,9 @@ test('HTTP: autenticación, emisión, duplicado, panel protegido y cierre de ses
   const api=async(path,body={},token='')=>{const r=await fetch('http://127.0.0.1:18787/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
   assert.equal((await api('status')).status,401);
   assert.equal((await api('login',{code:'invalid'})).status,401);
-  const auth=await api('login',{code:'DEMO-2026'});assert.equal(auth.status,200);const token=auth.data.token;
+  assert.equal((await api('login',{code:'DEMO-2026'})).status,403);
+  assert.equal((await api('login',{code:'DEMO-2026',reviewed:['sst']})).status,403);
+  const auth=await api('login',{code:'DEMO-2026',reviewed:['sst','hs']});assert.equal(auth.status,200);const token=auth.data.token;
   assert.equal((await api('vote',{election:'sst',selection:['s1','s2']},token)).status,400);
   assert.deepEqual((await api('status',{},token)).data.voted,[]);
   assert.equal((await api('vote',{election:'sst',selection:['s1']},token)).status,200);

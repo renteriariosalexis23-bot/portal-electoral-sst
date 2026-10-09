@@ -443,3 +443,5 @@ body,button,input,select{font-family:var(--sans)}
 .hero-photo>.hero-slide.is-active{animation:portada-zoom 12s linear infinite alternate!important;animation-play-state:running!important}
 @media(prefers-reduced-motion:reduce){.hero-photo>.hero-slide.is-active{transform:unset!important;animation:portada-position 12s linear infinite alternate!important}}
 @keyframes portada-position{from{object-position:50% 0%}to{object-position:50% 7%}}
+
+.learning-locked{opacity:.72;cursor:pointer}.reading-confirmation{margin-top:25px;padding:24px;border:1px solid #d6afd0;border-radius:14px;background:#f8edf5}.reading-confirmation p{font-size:14px;line-height:1.6}.reading-confirmation button{margin:5px 10px 5px 0}
