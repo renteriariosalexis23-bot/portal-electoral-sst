@@ -1,0 +1,15 @@
+[
+  {
+    "employee": "CODIGO-001",
+    "eligible": [
+      "sst",
+      "hs"
+    ]
+  },
+  {
+    "employee": "CODIGO-002",
+    "eligible": [
+      "hs"
+    ]
+  }
+]
