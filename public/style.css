@@ -424,3 +424,6 @@ body,button,input,select{font-family:var(--sans)}
 .ballot-seal{background:#2a0c2640;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-color:#fff}
 .choice-bar span{white-space:nowrap}
 @media(max-width:560px){.cand-num{display:none}}
+
+/* Fotografía de portada proporcionada por IMAGE & HEALTH. */
+.hero-photo>.hero-slide{object-position:center 44%}.hero-photo:after{background:linear-gradient(90deg,rgba(23,15,24,.83),rgba(23,15,24,.4) 62%,rgba(23,15,24,.16))}@media(max-width:600px){.hero-photo>.hero-slide{object-position:60% center}}
