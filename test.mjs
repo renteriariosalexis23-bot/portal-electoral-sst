@@ -121,3 +121,21 @@ test('modo prueba: el Excel genera códigos de prueba que sirven para ingresar',
   finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;}
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('túnel Cloudflare: límite de intentos por IP real y origen público aceptado',async()=>{
+ const {mkdtempSync,cpSync,rmSync,readdirSync}=await import('node:fs');
+ const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {spawn}=await import('node:child_process');
+ const dir=mkdtempSync(join(tmpdir(),'ih-tunnel-test-'));
+ for(const name of ['server.mjs','core.mjs','padron.mjs','config.json','public'])cpSync(new URL('./'+name,import.meta.url),join(dir,name),{recursive:true});
+ const child=spawn(process.execPath,['server.mjs'],{cwd:dir,env:{...process.env,PORT:'18790',TRUST_CLOUDFLARE:'1'},stdio:['ignore','pipe','pipe']});
+ try{
+  await new Promise((ok,ko)=>{child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:'))ok();});child.on('exit',c=>ko(Error('exit '+c)));});
+  const login=(ip,body,origin)=>fetch('http://127.0.0.1:18790/api/login',{method:'POST',headers:{'Content-Type':'application/json','CF-Connecting-IP':ip,...(origin?{Origin:origin}:{})},body:JSON.stringify(body)}).then(r=>r.status);
+  for(let i=0;i<30;i++)await login('203.0.113.'+(i%5),{dni:'1234567'+(i%3),code:'NOPE'});
+  for(let i=0;i<30;i++)await login('198.51.100.7',{dni:'87654321',code:'NOPE'});
+  assert.equal(await login('198.51.100.7',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']}),400);
+  assert.equal(await login('192.0.2.50',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']},'https://ejemplo-abc.trycloudflare.com'),200);
+  assert.equal(await login('192.0.2.51',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']},'https://sitio-malicioso.example'),403);
+  assert.ok(readdirSync(join(dir,'data','respaldos')).some(f=>f.endsWith('.sqlite')));
+ }finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;rmSync(dir,{recursive:true,force:true});}
+});

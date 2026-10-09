@@ -1,5 +1,5 @@
 import http from 'node:http';
-import {readFileSync,mkdirSync} from 'node:fs';
+import {readFileSync,mkdirSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
@@ -17,6 +17,14 @@ const admin=process.env.ADMIN_KEY||randomBytes(32).toString('hex');
 if(demo){db.prepare('INSERT OR IGNORE INTO voters VALUES(?,?,?)').run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nClave de junta para esta sesión: '+admin);}
 db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('SERVER_START',new Date().toISOString());
 const sessions=new Map(),attempts=new Map();
+/* Publicación con Cloudflare Tunnel: todo llega desde 127.0.0.1, así que la IP real viene en CF-Connecting-IP. */
+const tunnel=process.env.TRUST_CLOUDFLARE==='1';
+const clientIp=req=>tunnel&&req.headers['cf-connecting-ip']?String(req.headers['cf-connecting-ip']):req.socket.remoteAddress;
+const sameOrigin=(req,origin)=>{const h=new URL(origin).host;return h===req.headers.host||(tunnel&&(h===req.headers['x-forwarded-host']||/\.trycloudflare\.com$/.test(h)||h===process.env.PUBLIC_HOST));};
+/* Respaldo de la base cada 15 minutos (copia consistente con VACUUM INTO). */
+const backupDir=join(root,'data','respaldos');mkdirSync(backupDir,{recursive:true});
+function backup(){try{const f=join(backupDir,(demo?'demo-':'eleccion-')+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'')+'.sqlite');if(!existsSync(f)){db.exec("VACUUM INTO '"+f.replace(/'/g,"''")+"'");console.log('Respaldo guardado: '+f);}}catch(e){console.error('No se pudo guardar el respaldo: '+e.message);}}
+backup();setInterval(backup,15*60000).unref();
 const demoElections=cfg.elections.map(e=>({...e,ready:true,pendingReason:undefined}));
 const clockConfig=demo?{...cfg,elections:demoElections,opens:'2020-01-01T00:00:00Z',closes:'2099-01-01T00:00:00Z'}:cfg;
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
@@ -35,21 +43,21 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,serverTime:new Date().toISOString()});
   if(req.method!=='POST')return send(404,{error:'No encontrado.'});
   if(req.headers['content-type']!=='application/json')return send(415,{error:'Formato inválido.'});
-  if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)return send(403,{error:'Origen inválido.'});
+  if(req.headers.origin&&!sameOrigin(req,req.headers.origin))return send(403,{error:'Origen inválido.'});
   let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>250000)return send(413,{error:'Solicitud demasiado grande.'});}
   const body=JSON.parse(raw);
   if(path==='/api/login'){
-   const lk='login:'+req.socket.remoteAddress;guard(lk);
+   const lk='login:'+clientIp(req);guard(lk);
    const dni=normalizeDni(body.dni);
    if(typeof body.dni!=='string'||typeof body.code!=='string'||!/^\d{8}$/.test(dni)){fail(lk);return send(401,{error:'Escribe tu DNI de 8 dígitos y tu código personal.'});}
-   const dk='dni:'+dni;guard(dk,10);
+   const dk='dni:'+dni;try{guard(dk,10);}catch(e){fail(lk);throw e;}
    const key=credential(dni,body.code);
    if(!db.prepare('SELECT 1 FROM voters WHERE code_hash=? AND employee=?').get(hash(key),dni)){fail(lk);fail(dk);return send(401,{error:'DNI o código incorrecto.'});}
    if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:key,expires:Date.now()+1800000});return send(200,{token});
   }
   if(path==='/api/admin'||path==='/api/admin-receipt'){
-   const ak='admin:'+req.socket.remoteAddress;guard(ak);
+   const ak='admin:'+clientIp(req);guard(ak);
    if(typeof body.key!=='string'||!equal(body.key,admin)){fail(ak);return send(401,{error:'Clave incorrecta.'});}
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
    const closed=Date.now()>=Date.parse(cfg.closes);
@@ -66,4 +74,4 @@ const server=http.createServer(async(req,res)=>{
   send(404,{error:'No encontrado.'});
  }catch(err){send(400,{error:err.code?'No se pudo completar la operación.':err.message});}
 });
-server.listen(Number(process.env.PORT||8787),'127.0.0.1',()=>console.log('Aplicación: http://127.0.0.1:'+(process.env.PORT||8787)));
+server.listen(Number(process.env.PORT||8787),'127.0.0.1',()=>console.log('Aplicación: http://127.0.0.1:'+(process.env.PORT||8787)+(tunnel?' · modo túnel Cloudflare activo':'')));

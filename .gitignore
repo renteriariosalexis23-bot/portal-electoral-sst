@@ -7,3 +7,4 @@ credenciales/
 padron*.xlsx
 padron*.csv
 !padron-plantilla.xlsx
+data/respaldos/

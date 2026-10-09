@@ -25,9 +25,28 @@ En demo el horario de emisión está abierto para pruebas; los resultados conser
 Esta versión no acredita cumplimiento normativo ni anonimato frente al administrador del servidor. SQLite conserva orden físico y un administrador con acceso completo puede observar transacciones o modificar la base. Separar las tablas no resuelve ese riesgo. Para la elección oficial se necesita revisión independiente del diseño de privacidad, roles y custodia, protección de logs/copias y evidencia de integridad externa.
 El registro de eventos actual NO es una auditoría inmutable ni acredita apertura/cierre formal. Se debe añadir registro durable de apertura/cierre, control de reloj, respaldo probado y procedimientos de contingencia.
 La credencial es de posesión: hace falta un procedimiento fiable de entrega individual/verificación de identidad. No se implementaron revocación, recuperación ni doble control administrativo.
-El servidor escucha solo en este equipo. Falta alojamiento con HTTPS y controles operativos para acceso desde sedes y remoto; no expongas directamente este servidor a Internet.
+El servidor escucha solo en este equipo. Para acceso desde sedes usa la publicación con Cloudflare Tunnel descrita arriba; no expongas directamente el puerto del servidor a Internet.
 
 La junta debe confirmar padrón por comité, candidaturas, cantidad de marcas permitidas, titulares/suplentes, reglas de empates e impugnaciones, fechas del mandato y actas. Dos marcas en SST son un ejemplo, no una regla legal ni una asignación automática de cargos. No se proclaman ganadores automáticamente. El panel no reemplaza actas firmadas.
+
+## Publicar en internet gratis (Cloudflare Tunnel, sin dominio)
+El portal corre en una PC de la empresa y Cloudflare le da una dirección pública con HTTPS. Los datos (data/election.sqlite) **nunca salen de esa PC**; Cloudflare solo transporta el tráfico cifrado.
+
+**Una sola vez, en la PC de la junta:**
+1. Instala Node.js 24 o superior (https://nodejs.org).
+2. Instala cloudflared: abre "Símbolo del sistema" y ejecuta `winget install --id Cloudflare.cloudflared`.
+3. Configura Windows para que la PC **no se suspenda** (Configuración → Sistema → Inicio/apagado y suspensión → "Nunca") y desactiva las actualizaciones automáticas ese día.
+4. Haz un ensayo completo un día antes, desde un celular con datos móviles (no con el wifi de la oficina).
+
+**El día de la elección:**
+1. Conecta la PC por cable y, si es posible, a un UPS.
+2. Doble clic en **INICIAR-PUBLICO.cmd**. Escribe la clave de la junta cuando la pida.
+3. Copia la dirección `https://….trycloudflare.com` que aparece y compártela (WhatsApp, correo, carteles con QR).
+4. No cierres ninguna de las dos ventanas hasta el cierre. Si la PC se reinicia, vuelve a abrir INICIAR-PUBLICO.cmd: **la dirección cambia** y hay que compartirla de nuevo (los votos ya registrados se conservan).
+
+**Respaldos:** el servidor guarda una copia de la base al iniciar y cada 15 minutos en data/respaldos/. Al terminar, copia data/election.sqlite y data/respaldos/ a una USB bajo custodia de la junta.
+
+**Limitaciones del túnel gratuito sin dominio:** Cloudflare lo ofrece para pruebas, sin garantía de disponibilidad, y la dirección es aleatoria y cambia en cada reinicio. Para una dirección fija y un servicio más estable se necesita un dominio propio (desde unos US$10 al año) con un túnel con nombre, también gratuito.
 
 ## Ensayar con tu propio Excel (modo prueba)
 Con config.json en `"mode": "demo"` puedes ejecutar `node import-padron.mjs padron.xlsx`: los códigos se guardan en la base de demostración (demo-dni.sqlite), las tarjetas salen marcadas "PRUEBA · NO VÁLIDA" en credenciales/PRUEBA-tarjetas-FECHA.html, y sirven para ingresar al portal de prueba. Para empezar de cero, cierra el servidor y borra data/demo-dni.sqlite. No entregues tarjetas de prueba a los trabajadores.
