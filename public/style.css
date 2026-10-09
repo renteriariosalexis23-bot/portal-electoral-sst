@@ -372,3 +372,55 @@ body,button,input,select{font-family:var(--sans)}
 @media(max-width:900px){.ex-intro{grid-template-columns:1fr}.ex-funcs{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.ex-tabs{grid-template-columns:1fr}.ex-tab{grid-template-columns:90px 1fr}.ex-tab strong{font-size:16px}.ex-funcs{grid-template-columns:1fr}.ex-func{height:180px}}
 @media(prefers-reduced-motion:reduce){.ex-front,.ex-back{transition:none}}
+
+/* ===== Cédula tipo papeleta ===== */
+#content[data-tone=sst]{--tone:#2f7d79;--tone-soft:#e3f1ef;--tone-ink:#1d5552}
+#content[data-tone=hs]{--tone:#861079;--tone-soft:#f7e8f4;--tone-ink:#5c0f53}
+.ballot-head{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;min-height:170px;margin:0 0 22px;padding:26px 28px;border-radius:18px;overflow:hidden;color:#fff;background:var(--tone,#861079)}
+.ballot-head>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;mix-blend-mode:luminosity;animation:drift 14s ease-out both}
+.ballot-head:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,var(--tone,#861079) 30%,transparent 110%);opacity:.92}
+.ballot-head-copy{position:relative;z-index:1;max-width:560px}
+.ballot-head-copy>span{display:block;font-size:11px;font-weight:800;letter-spacing:.2em;opacity:.85}
+#content .ballot-head h2{color:#fff;font-size:clamp(24px,3vw,34px);line-height:1.1;margin:10px 0 8px}
+#content .ballot-head p{color:#ffffffd9;margin:0;font-size:14px}
+.ballot-seal{position:relative;z-index:1;flex:none;display:grid;place-items:center;align-content:center;width:84px;height:84px;border-radius:50%;border:2px dashed #ffffff99;transform:rotate(-12deg);animation:pop .6s .2s both}
+.ballot-seal b{font:italic 600 22px var(--serif);line-height:1}.ballot-seal small{font-size:10px;letter-spacing:.2em;opacity:.8}
+#ballot .selection-meter{display:none}
+#ballot .candidate-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-height:none!important;overflow:visible!important;padding:4px!important}
+#ballot .candidate{position:relative;flex-direction:column;align-items:flex-start;gap:0;margin:0;padding:22px 20px 20px;min-height:220px;border:2px solid var(--line);border-radius:18px;background:#fff;box-shadow:none;transform:none;cursor:pointer;transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .25s,box-shadow .3s,background .3s,opacity .3s}
+#ballot .candidate input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+#ballot .candidate:has(input:focus-visible){outline:3px solid var(--tone);outline-offset:3px}
+#ballot .candidate:hover{transform:translateY(-5px)!important;border-color:var(--tone);box-shadow:0 18px 38px #2a0c2618}
+#ballot .candidate .avatar{width:64px;height:64px;font-size:20px;margin:6px 0 16px}
+#ballot .candidate-name{font-size:16px;line-height:1.3;letter-spacing:-.01em}
+#ballot .candidate-detail{font-size:12.5px;margin-top:4px}
+.cand-num{position:absolute;top:16px;right:18px;font:italic 400 34px/1 var(--serif);color:#e7dbe5;transition:color .3s}
+.cand-check{position:absolute;top:16px;left:18px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:800;color:#fff;background:var(--tone);transform:scale(0);transition:transform .35s cubic-bezier(.2,.9,.3,1.4)}
+#ballot .candidate:has(input:checked){border-color:var(--tone);background:linear-gradient(160deg,#fff 10%,var(--tone-soft));box-shadow:0 0 0 4px color-mix(in srgb,var(--tone) 18%,transparent),0 22px 44px #2a0c261f;transform:translateY(-5px)}
+#ballot .candidate:has(input:checked) .cand-check{transform:scale(1)}
+#ballot .candidate:has(input:checked) .cand-num{color:var(--tone)}
+#ballot .candidate:has(input:checked) .avatar{transform:scale(1.08);box-shadow:0 0 0 4px #fff,0 0 0 7px var(--tone)}
+#ballot.has-choice .candidate:not(:has(input:checked)){opacity:.55}
+#ballot.has-choice .candidate:not(:has(input:checked)):hover{opacity:1}
+#ballot .blank-option{grid-column:1/-1;flex-direction:row;align-items:center;gap:18px;min-height:0;border-style:dashed}
+.blank-icon{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:50%;border:2px dashed #cdb9ca;font-size:22px;color:#9b8a98;transition:all .3s}
+#ballot .blank-option:has(input:checked) .blank-icon{border-style:solid;border-color:var(--tone);background:var(--tone);color:#fff}
+.choice-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:20px;padding:16px 20px;border-radius:14px;background:var(--plum);color:#fff}
+.choice-bar span{font-size:11px;font-weight:800;letter-spacing:.2em;opacity:.7}
+.choice-bar strong{font:italic 400 20px var(--serif);opacity:.6}
+.choice-bar strong.chosen{opacity:1}
+@media(max-width:900px){#ballot .candidate-options{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){#ballot .candidate-options{grid-template-columns:1fr}#ballot .candidate{min-height:0;flex-direction:row;align-items:center;gap:14px;padding:16px}#ballot .candidate .avatar{width:52px;height:52px;margin:0;font-size:17px}.cand-num{font-size:24px;top:auto;bottom:12px}.cand-check{left:auto;right:14px;top:12px}.ballot-seal{display:none}.ballot-head{min-height:140px;padding:20px}}
+
+/* Confirmación */
+.review-committee{display:inline-block;margin:0 0 6px;padding:6px 14px;border-radius:99px;background:var(--tone-soft,#f7e8f4);color:var(--tone-ink,#5c0f53);font-size:12px;font-weight:700}
+.review-choice{display:flex;align-items:center;gap:20px;margin:18px 0;padding:24px;border-radius:18px;border:2px solid var(--tone,#861079);background:linear-gradient(160deg,#fff 10%,var(--tone-soft,#f7e8f4));animation:rise .5s both}
+.review-choice .avatar{width:76px;height:76px;font-size:24px;box-shadow:0 0 0 4px #fff,0 0 0 7px var(--tone,#861079)}
+.review-choice small{display:block;font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--tone,#861079)}
+.review-choice strong{display:block;font:italic 400 clamp(22px,2.6vw,30px)/1.15 var(--serif);color:var(--plum);margin:6px 0}
+#content .review-choice p{margin:0;font-size:13px}
+.blank-avatar{background:#fff!important;color:#9b8a98!important;border:2px dashed #cdb9ca;box-shadow:none!important}
+@media(prefers-reduced-motion:reduce){.ballot-head>img,.ballot-seal,.review-choice{animation:none}}
+.ballot-seal{background:#2a0c2640;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-color:#fff}
+.choice-bar span{white-space:nowrap}
+@media(max-width:560px){.cand-num{display:none}}

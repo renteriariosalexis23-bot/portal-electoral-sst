@@ -346,3 +346,43 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  box.querySelectorAll('.ex-tab').forEach(t=>{t.onclick=()=>render(t.dataset.tab);t.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const tabs=[...box.querySelectorAll('.ex-tab')],n=tabs[(tabs.indexOf(t)+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];n.focus();render(n.dataset.tab);}};});
  render('sst');
 })();
+
+/* ===== Cédula tipo papeleta y confirmación ===== */
+(()=>{
+ const pics={sst:'/salud.jpg',hs:'/equipo.jpg'};
+ const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
+ const initials=n=>{const w=n.trim().split(/\s+/);return (w[0][0]+(w[1]?w[1][0]:'')).toUpperCase();};
+ const baseBallot2=ballot;
+ ballot=function(e,previous){
+  baseBallot2(e,previous);
+  content.dataset.tone=e.id;
+  const form=$('#ballot');if(!form)return;
+  const h2=content.querySelector('h2'),intro=h2&&h2.nextElementSibling;
+  const head=document.createElement('div');head.className='ballot-head';
+  head.innerHTML='<img src="'+(pics[e.id]||'/equipo.jpg')+'" alt=""><div class="ballot-head-copy"><span>CÉDULA DE VOTACIÓN · '+esc(cfg.period||'')+'</span></div><div class="ballot-seal" aria-hidden="true"><b>'+(e.id==='sst'?'SST':'HS')+'</b><small>2026</small></div>';
+  h2.before(head);head.querySelector('.ballot-head-copy').append(h2);
+  if(intro&&intro.tagName==='P'){intro.textContent='Marca una sola opción. Puedes elegir una candidatura o votar en blanco.';head.querySelector('.ballot-head-copy').append(intro);}
+  form.querySelectorAll('.candidate').forEach(label=>{
+   const name=label.querySelector('.candidate-name');
+   if(!name){label.classList.add('blank-option');const input=label.querySelector('input');label.textContent='';label.append(input);label.insertAdjacentHTML('beforeend','<span class="blank-icon" aria-hidden="true">○</span><span><b class="candidate-name">Voto en blanco</b><small class="candidate-detail">No eliges a ninguna candidatura. Tu participación se registra igual.</small></span>');return;}
+   const m=name.textContent.match(/^(\d+)\s*·\s*(.*)$/);
+   if(m){name.textContent=m[2];label.insertAdjacentHTML('afterbegin','<span class="cand-num" aria-hidden="true">'+m[1]+'</span>');}
+   label.insertAdjacentHTML('beforeend','<span class="cand-check" aria-hidden="true">✓</span>');
+  });
+  const actions=form.querySelector('.actions');
+  actions.insertAdjacentHTML('beforebegin','<div class="choice-bar" aria-live="polite"><span>Tu elección</span><strong id="choice-name">Aún no eliges</strong></div>');
+  const sync=()=>{const c=form.querySelector('[name=candidate]:checked');form.classList.toggle('has-choice',!!c);const label=c&&c.closest('.candidate');const t=$('#choice-name');t.textContent=!c?'Aún no eliges':c.id==='blank'?'Voto en blanco':label.querySelector('.candidate-name').textContent;t.classList.toggle('chosen',!!c);if(c&&!matchMedia('(prefers-reduced-motion: reduce)').matches)t.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:300,easing:'ease-out'});};
+  form.addEventListener('change',sync);sync();
+ };
+ const baseReview=review;
+ review=function(e,selection){
+  baseReview(e,selection);
+  content.dataset.tone=e.id;
+  const card=content.querySelector('.card');if(!card)return;
+  card.className='review-choice';
+  if(!selection.length){card.innerHTML='<span class="avatar blank-avatar" aria-hidden="true">○</span><div><small>TU ELECCIÓN</small><strong>Voto en blanco</strong><p>No eliges a ninguna candidatura.</p></div>';}
+  else{const c=e.candidates.find(x=>x.id===selection[0]),i=e.candidates.indexOf(c);card.innerHTML='<span class="avatar" aria-hidden="true">'+esc(initials(c.name))+'</span><div><small>TU ELECCIÓN · CANDIDATURA '+String(c.number||i+1).padStart(2,'0')+'</small><strong>'+esc(c.name)+'</strong><p>'+esc(c.role||'')+(c.site?' · '+esc(c.site):'')+'</p></div>';card.querySelector('.avatar').style.setProperty('--av',tones[i%tones.length]);}
+  const h=content.querySelector('h2');if(h)h.insertAdjacentHTML('afterend','<span class="review-committee">'+esc(e.title)+'</span>');
+  const p=h&&h.nextElementSibling&&h.nextElementSibling.nextElementSibling;if(p&&p.tagName==='P'&&p.textContent===e.title)p.remove();
+ };
+})();
