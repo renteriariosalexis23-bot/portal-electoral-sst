@@ -128,3 +128,80 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  panel.focus({preventScroll:true});panel.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'});
  if(!reducedMotion.matches)panel.animate([{opacity:0,transform:'translateY(15px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:'ease-out'});
 });
+
+/* ===== Capa de interacción y movimiento ===== */
+(()=>{
+ const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const head=document.querySelector('header'),bar=document.createElement('div');bar.className='scroll-progress';document.body.append(bar);
+ const heroImg=document.querySelector('.hero-photo>img');
+ function onScroll(){const y=scrollY,max=document.documentElement.scrollHeight-innerHeight;bar.style.setProperty('transform','scaleX('+(max>0?Math.min(1,y/max):0)+')');head.classList.toggle('is-scrolled',y>10);if(heroImg&&!still&&y<900)heroImg.style.setProperty('margin-top',(y*.12)+'px');}
+ addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+ /* Cuenta regresiva hacia la apertura */
+ let box=null;
+ const pad=n=>String(n).padStart(2,'0');
+ function tick(){
+  if(typeof cfg==='undefined'||!cfg||!cfg.opens)return;
+  const hero=document.querySelector('.hero');if(!hero)return;
+  if(!box){box=document.createElement('div');box.className='countdown';box.setAttribute('role','timer');hero.append(box);}
+  const now=Date.now(),open=Date.parse(cfg.opens),close=Date.parse(cfg.closes);
+  if(now>=close){box.className='countdown is-open';box.innerHTML='<small>PROCESO ELECTORAL</small><strong>Votación cerrada</strong>';return;}
+  if(now>=open){box.className='countdown is-open';box.innerHTML='<small>HASTA LAS 4:00 P. M.</small><strong>Votación abierta ahora</strong>';return;}
+  const s=Math.floor((open-now)/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),sec=s%60;
+  box.className='countdown';
+  box.innerHTML='<small>FALTAN PARA ABRIR LA VOTACIÓN</small><div class="countdown-grid">'+[[d,'días'],[h,'horas'],[m,'min'],[sec,'seg']].map(([v,l])=>'<div class="countdown-unit"><b>'+pad(v)+'</b><span>'+l+'</span></div>').join('')+'</div>';
+ }
+ setInterval(tick,1000);tick();
+
+ /* Efecto de onda en botones */
+ document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled||still)return;const r=b.getBoundingClientRect(),o=document.createElement('span');o.className='ripple';o.style.setProperty('left',(e.clientX-r.left)+'px');o.style.setProperty('top',(e.clientY-r.top)+'px');b.append(o);setTimeout(()=>o.remove(),650);});
+
+ /* Avatares con iniciales en la cédula */
+ const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
+ const baseBallot=ballot;
+ ballot=function(e,previous){
+  baseBallot(e,previous);
+  document.querySelectorAll('#ballot .candidate').forEach((label,i)=>{
+   const name=label.querySelector('.candidate-name');if(!name)return;
+   const words=name.textContent.replace(/^\d+\s*·\s*/,'').trim().split(/\s+/);
+   const av=document.createElement('i');av.className='avatar';av.setAttribute('aria-hidden','true');av.textContent=(words[0][0]+(words[1]?words[1][0]:'')).toUpperCase();av.style.setProperty('--av',tones[i%tones.length]);
+   label.querySelector('span').before(av);
+  });
+ };
+
+ /* Mostrar u ocultar la credencial */
+ const baseLogin=login;
+ login=function(){
+  baseLogin();
+  const input=$('#code');if(!input)return;
+  const wrap=document.createElement('div');wrap.className='pw-wrap';input.before(wrap);wrap.append(input);
+  const t=document.createElement('button');t.type='button';t.className='pw-toggle';t.textContent='Mostrar';t.setAttribute('aria-label','Mostrar u ocultar la credencial');
+  t.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';t.textContent=show?'Ocultar':'Mostrar';input.focus();};
+  wrap.append(t);
+ };
+
+ /* Confeti al registrar el voto */
+ function confetti(){
+  if(still)return;
+  const c=document.createElement('canvas');c.className='confetti';c.width=innerWidth;c.height=innerHeight;document.body.append(c);
+  const g=c.getContext('2d'),cols=['#861079','#d46bc4','#f4c9ee','#46133f','#e8b84a','#2f7d79'];
+  const ps=Array.from({length:140},()=>({x:innerWidth/2+(Math.random()-.5)*160,y:innerHeight*.45,vx:(Math.random()-.5)*14,vy:-Math.random()*13-4,s:Math.random()*7+4,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.random()*cols.length|0]}));
+  let f=0;
+  (function step(){g.clearRect(0,0,c.width,c.height);f++;for(const p of ps){p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.globalAlpha=Math.max(0,1-f/130);g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);g.restore();}
+   if(f<130)requestAnimationFrame(step);else c.remove();})();
+ }
+ const baseSuccess2=showSuccess;
+ showSuccess=function(e){baseSuccess2(e);confetti();};
+
+ /* Panel de la junta: anillos y contadores animados */
+ const baseAdmin=renderAdmin;
+ renderAdmin=function(report,key){
+  baseAdmin(report,key);
+  if(still)return;
+  document.querySelectorAll('.ring-value').forEach(r=>{const target=r.getAttribute('stroke-dasharray');r.setAttribute('stroke-dasharray','0 100');requestAnimationFrame(()=>requestAnimationFrame(()=>r.setAttribute('stroke-dasharray',target)));});
+  document.querySelectorAll('.stat-details b,.admin-number strong,.quick-filters b').forEach(el=>{
+   const m=el.textContent.match(/^(\d+)(.*)$/);if(!m)return;const end=+m[1],rest=m[2],t0=performance.now();
+   (function run(t){const k=Math.min(1,(t-t0)/900),v=Math.round(end*(1-Math.pow(1-k,3)));el.textContent=v+rest;if(k<1)requestAnimationFrame(run);})(t0);
+  });
+ };
+})();
