@@ -663,3 +663,5 @@ body.voting-mode nav{display:none!important}
 .js-form{margin-top:12px}.js-form label{display:block;margin:10px 0 6px;font-size:13px}
 .js-form input[type=password]{width:100%;max-width:320px;display:block;margin-top:6px;padding:12px;border:1px solid #d8ccd5;border-radius:6px;font:15px inherit}
 .js-pad{width:100%;max-width:600px;aspect-ratio:10/3;height:auto;border:1px dashed #b9a6b5;border-radius:10px;background:#fdfbfd;touch-action:none;display:block;margin-bottom:8px}
+.esc-name .cargo{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-style:normal;font-size:11px;font-weight:700;vertical-align:middle}
+.cargo.titular{background:#861079;color:#fff}.cargo.suplente{background:#f1e2ef;color:#6a0f60}.cargo.empate{background:#fbf0d9;color:#7a5a12}
