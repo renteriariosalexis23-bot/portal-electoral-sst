@@ -565,3 +565,61 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  const baseNotice=notice;
  notice=function(s=''){baseNotice(s);if(!s)return;const el=$('#notice'),r=el.getBoundingClientRect();if(r.top<90||r.bottom>innerHeight)el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});};
 })();
+
+/* ===== Lectura obligatoria de cada comité ===== */
+(()=>{
+ const panel=document.getElementById('ex-panel'),box=document.getElementById('explainer');if(!panel||!box)return;
+ const prog={},st=id=>prog[id]||(prog[id]={funcs:new Set(),cases:new Set()});
+ panel.addEventListener('click',ev=>{
+  const id=box.dataset.theme,f=ev.target.closest('.ex-func');
+  if(f)st(id).funcs.add([...panel.querySelectorAll('.ex-func')].indexOf(f));
+  if(ev.target.closest('.flow-reveal')){const a=panel.querySelector('.flow-node.active');if(a)st(id).cases.add(+a.dataset.i);}
+  setTimeout(update,0);
+ },true);
+ function update(){
+  const id=box.dataset.theme,btn=document.getElementById('confirm-reading');if(!btn)return;
+  let list=panel.querySelector('.read-checklist');
+  if(reviewedCommittees.has(id)){if(list)list.remove();return;}
+  const nf=panel.querySelectorAll('.ex-func').length,nc=panel.querySelectorAll('.flow-node').length,s=st(id),okF=s.funcs.size>=nf,okC=s.cases.size>=nc;
+  if(!list){btn.insertAdjacentHTML('beforebegin','<ul class="read-checklist" aria-live="polite"></ul>');list=panel.querySelector('.read-checklist');}
+  list.innerHTML='<li class="'+(okF?'ok':'')+'"><span aria-hidden="true">'+(okF?'✓':'')+'</span>Abre las '+nf+' tarjetas de "Sus funciones" <b>'+Math.min(s.funcs.size,nf)+'/'+nf+'</b></li><li class="'+(okC?'ok':'')+'"><span aria-hidden="true">'+(okC?'✓':'')+'</span>Descubre las '+nc+' respuestas de "¿Cuándo actúa el comité?" <b>'+Math.min(s.cases.size,nc)+'/'+nc+'</b></li>';
+  btn.disabled=!(okF&&okC);btn.textContent=btn.disabled?'Completa la lectura para confirmar':'He leído la información de este comité';
+ }
+ new MutationObserver(()=>setTimeout(update,0)).observe(panel,{childList:true});setTimeout(update,0);
+})();
+
+/* ===== Firma obligatoria con nombres y apellidos ===== */
+(()=>{
+ const okName=n=>{const t=String(n||'').trim().replace(/\s+/g,' ');return t.length<=150&&/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' -]+$/.test(t)&&t.split(' ').filter(w=>w.replace(/['-]/g,'').length>=2).length>=2;};
+ const nameMsg='Escribe tus nombres y apellidos completos (al menos un nombre y un apellido, solo letras).';
+ const baseSuccess3=showSuccess;
+ showSuccess=function(e){
+  baseSuccess3(e);
+  ['#continue-voting','#finish-session'].forEach(s=>{const b=$(s);if(b)b.remove();});
+  const sign=[...content.querySelectorAll('.vote-success .actions button')].find(b=>/Firmar/.test(b.textContent));
+  if(sign)sign.textContent='Firmar mi constancia (obligatorio) →';
+  const m=content.querySelector('.vote-success .muted');if(m)m.insertAdjacentHTML('afterend','<p class="must-sign">Para terminar, firma tu constancia de participación. <b>Es obligatoria.</b></p>');
+ };
+ const baseSig=signatureForm;
+ signatureForm=function(e){
+  baseSig(e);
+  const later=$('#later-signature');if(later){later.hidden=true;later.setAttribute('aria-hidden','true');}
+  const lab=content.querySelector('label[for=signer-name]');if(lab)lab.textContent='Nombres y apellidos completos (obligatorio)';
+  const inp=$('#signer-name');if(!inp)return;
+  inp.placeholder='Ejemplo: María Elena Pérez Rojas';inp.required=true;
+  const hint=document.createElement('p');hint.className='name-hint';inp.after(hint);
+  const check=()=>{const ok=okName(inp.value);inp.classList.toggle('is-ok',ok);hint.textContent=!inp.value.trim()?'':ok?'✓ Nombre completo':'Falta: escribe al menos un nombre y un apellido, solo con letras.';hint.classList.toggle('ok',ok);};
+  inp.addEventListener('input',check);
+  const save=$('#save-signature'),orig=save.onclick;
+  save.onclick=ev=>{if(!okName(inp.value)){check();notice(nameMsg);inp.focus();return;}return orig(ev);};
+ };
+ const baseDash3=dashboard;
+ dashboard=async function(){
+  await baseDash3();
+  const pend=(status.voted||[]).filter(id=>!(status.signed||[]).includes(id));if(!pend.length)return;
+  const e=cfg.elections.find(x=>x.id===pend[0]);
+  content.querySelector('h2').insertAdjacentHTML('afterend','<div class="must-sign-box" role="alert"><div><b>Falta firmar tu constancia de '+esc(e.title)+'.</b><span>Es obligatoria y debes hacerla antes de votar en el otro comité.</span></div><button class="primary" id="sign-now">Firmar ahora →</button></div>');
+  $('#sign-now').onclick=()=>signatureForm(e);
+  content.querySelectorAll('[data-election]').forEach(b=>{if(!status.voted.includes(b.dataset.election)){b.disabled=true;b.textContent='Primero firma tu constancia';}});
+ };
+})();

@@ -92,7 +92,10 @@ const server=http.createServer(async(req,res)=>{
   if(path==='/api/sign')return send(200,signParticipation(db,cfg,session.code,body));
   if(path==='/api/receipt'){const row=db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(hash(session.code),body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
   if(path==='/api/status')return send(200,{signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(hash(session.code)).map(s=>s.election),eligible:JSON.parse(db.prepare('SELECT eligible FROM voters WHERE code_hash=?').get(hash(session.code)).eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(hash(session.code)).map(v=>v.election)});
-  if(path==='/api/vote'){vote(db,clockConfig,session.code,body.election,body.selection);return send(200,{ok:true});}
+  if(path==='/api/vote'){
+   const unsigned=db.prepare('SELECT p.election FROM participation p LEFT JOIN signatures s ON s.code_hash=p.code_hash AND s.election=p.election WHERE p.code_hash=? AND s.code_hash IS NULL').get(hash(session.code));
+   if(unsigned)return send(400,{error:'Primero firma la constancia de tu voto anterior ('+((cfg.elections.find(e=>e.id===unsigned.election)||{}).title||unsigned.election)+').'});
+   vote(db,clockConfig,session.code,body.election,body.selection);return send(200,{ok:true});}
   send(404,{error:'No encontrado.'});
  }catch(err){send(400,{error:err.code?'No se pudo completar la operación.':err.message});}
 });
