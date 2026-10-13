@@ -443,10 +443,11 @@ function membrete(html){
  if(!membreteUrl)return html;
  const i=html.indexOf('</style>')+8;if(i<8)return html;
  const css='<style>@page{size:A4;margin:0}html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{max-width:none!important;margin:0!important;padding:0 20mm!important;box-sizing:border-box}'+
-  '.mb-fondo{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:-1}table.mb{width:100%;border-collapse:collapse;margin:0}table.mb>thead>tr>td,table.mb>tbody>tr>td,table.mb>tfoot>tr>td{border:0!important;padding:0!important;background:none!important}table.mb>tbody>tr{break-inside:auto!important;page-break-inside:auto!important}.mb-arriba{height:40mm}.mb-abajo{height:34mm}'+
+  '.mb-fondo{position:fixed;top:0;left:0;width:210mm;height:297mm;z-index:-1}table.mb{width:100%;border-collapse:collapse;margin:0}table.mb>thead>tr>td,table.mb>tbody>tr>td,table.mb>tfoot>tr>td{border:0!important;padding:0!important;background:none!important}table.mb>tbody>tr{break-inside:auto!important;page-break-inside:auto!important}.mb-arriba{height:40mm}.mb-print{font:15px Arial;padding:10px 18px;margin:0 0 14px;background:#861079;color:#fff;border:0;border-radius:6px;cursor:pointer}@media print{.mb-print{display:none}}.mb-abajo{height:34mm}'+
   '@media screen{html{background:#e9e4e8}body{width:210mm;min-height:297mm;margin:24px auto!important;background:#fff url('+membreteUrl+') top center/210mm 297mm repeat-y;box-shadow:0 4px 24px #0002}.mb-fondo{display:none}}</style>';
  const end=html.lastIndexOf('</html>'),body=html.slice(i,end<0?html.length:end);
- return html.slice(0,i)+css+'<img class="mb-fondo" src="'+membreteUrl+'" alt=""><table class="mb"><thead><tr><td><div class="mb-arriba"></div></td></tr></thead><tbody><tr><td>'+body+'</td></tr></tbody><tfoot><tr><td><div class="mb-abajo"></div></td></tr></tfoot></table></html>';
+ const printBtn=body.includes('onclick="print()"')?'':'<button class="mb-print" onclick="print()">Imprimir / Guardar como PDF</button>';
+ return html.slice(0,i)+css+'<img class="mb-fondo" src="'+membreteUrl+'" alt=""><table class="mb"><thead><tr><td><div class="mb-arriba"></div></td></tr></thead><tbody><tr><td>'+printBtn+body+'</td></tr></tbody><tfoot><tr><td><div class="mb-abajo"></div></td></tr></tfoot></table></html>';
 }
 function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 (()=>{
