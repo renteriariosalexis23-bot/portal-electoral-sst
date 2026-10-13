@@ -61,7 +61,7 @@ function enhancePanel(report){
  heading.insertAdjacentHTML('beforebegin','<div class="panel-banner"><img src="/equipo.jpg" alt="Imagen referencial de trabajo en equipo"><div><span>IMAGE & HEALTH</span><strong>Una jornada para<br>participar y construir.</strong><small>Junta electoral · 02 noviembre 2026</small></div></div>');
  document.querySelectorAll('.admin-stat').forEach((card,index)=>{
   const e=report.elections[index],pct=e.eligible?Math.round(100*e.participation/e.eligible):0;
-  card.insertAdjacentHTML('afterbegin','<div class="stat-photo"><img src="'+(e.id==='sst'?'/salud.jpg':'/equipo.jpg')+'" alt="Imagen referencial"><span>'+ (e.id==='sst'?'SEGURIDAD Y SALUD':'RESPETO EN EL TRABAJO')+'</span></div>');
+  card.insertAdjacentHTML('afterbegin','<div class="stat-photo"><img src="'+(e.id==='sst'?'/sst.jpg':'/hs.jpg')+'" alt="Imagen referencial"><span>'+ (e.id==='sst'?'SEGURIDAD Y SALUD':'RESPETO EN EL TRABAJO')+'</span></div>');
   const number=card.querySelector('.admin-number');
   number.innerHTML='<svg class="participation-ring" viewBox="0 0 120 120" role="img" aria-label="'+pct+' por ciento de participación"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-dasharray="'+pct+' 100" transform="rotate(-90 60 60)"/><text x="60" y="65" text-anchor="middle">'+pct+'%</text></svg><div><strong>'+e.participation+' de '+e.eligible+'</strong><small>personas participaron</small></div>';
   card.querySelector('progress').remove();
@@ -121,7 +121,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  const symbols=isSst?['▤','⌕','◇','◎']:['⌕','▤','✓','◎'];
  document.querySelectorAll('[data-info]').forEach(b=>{b.setAttribute('aria-expanded',String(b===button));b.classList.toggle('selected',b===button);});
  panel.hidden=false;panel.className='committee-info visual-guide '+(isSst?'guide-sst':'guide-hs');panel.setAttribute('aria-labelledby','guide-title');
- panel.innerHTML='<div class="guide-cover"><img src="'+(isSst?'/salud.jpg':'/equipo.jpg')+'" alt="Fotografía referencial de '+(isSst?'profesionales de salud trabajando en equipo':'un equipo reunido')+'"><div class="guide-cover-copy"><span class="guide-kicker">'+(isSst?'PREVENCIÓN Y BIENESTAR':'DIGNIDAD Y RESPETO')+'</span><h3 id="guide-title">'+esc(g.title)+'</h3><p>'+ (isSst?'Cuidar el trabajo también es cuidar a las personas.':'Un entorno de respeto se construye con participación.')+'</p><small>Imagen referencial</small></div><button id="close-guide" aria-label="Cerrar información del comité">Cerrar ×</button></div>'+
+ panel.innerHTML='<div class="guide-cover"><img src="'+(isSst?'/sst.jpg':'/hs.jpg')+'" alt="Fotografía referencial de '+(isSst?'profesionales de salud trabajando en equipo':'un equipo reunido')+'"><div class="guide-cover-copy"><span class="guide-kicker">'+(isSst?'PREVENCIÓN Y BIENESTAR':'DIGNIDAD Y RESPETO')+'</span><h3 id="guide-title">'+esc(g.title)+'</h3><p>'+ (isSst?'Cuidar el trabajo también es cuidar a las personas.':'Un entorno de respeto se construye con participación.')+'</p><small>Imagen referencial</small></div><button id="close-guide" aria-label="Cerrar información del comité">Cerrar ×</button></div>'+
  '<div class="guide-body"><div class="guide-overview"><div><span class="guide-kicker">CONOCE SU LABOR</span><h4>¿De qué se encarga?</h4><p>'+esc(g.what)+'</p></div><aside class="guide-purpose"><span aria-hidden="true" class="purpose-icon">'+(isSst?'✚':'◎')+'</span><h4>¿Por qué importa?</h4><p>'+esc(g.why)+'</p></aside></div><div class="guide-functions-heading"><div><span class="guide-kicker">DEL COMPROMISO A LA ACCIÓN</span><h4>Sus principales funciones</h4></div><p>Selecciona una tarjeta para conocer más.</p></div><div class="function-grid">'+g.functions.map((f,i)=>'<details class="function-card"><summary><span class="function-symbol" aria-hidden="true">'+symbols[i]+'</span><span><small>0'+(i+1)+'</small><strong>'+titles[i]+'</strong></span><b class="expand-symbol" aria-hidden="true">+</b></summary><p>'+esc(f)+'</p></details>').join('')+'</div><div class="guide-bottom"><p class="guide-note">'+esc(g.note)+'</p><a class="guide-source" href="'+g.source+'" target="_blank" rel="noopener">'+esc(g.label)+' ↗</a></div></div>';
  $('#close-guide').onclick=()=>{panel.hidden=true;button.focus();document.querySelectorAll('[data-info]').forEach(b=>{b.setAttribute('aria-expanded','false');b.classList.remove('selected');});};
  panel.querySelectorAll('.function-card').forEach(card=>card.addEventListener('toggle',()=>{card.querySelector('.expand-symbol').textContent=card.open?'−':'+';}));
@@ -209,7 +209,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 /* ===== Pantalla "Tus elecciones", pasos y sesión ===== */
 (()=>{
  const lock='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm-2 3.5a2 2 0 1 1 4 0V6H6V4.5Z"/></svg>';
- const meta={sst:['01 · PREVENCIÓN','/salud.jpg'],hs:['02 · RESPETO','/equipo.jpg']};
+ const meta={sst:['01 · PREVENCIÓN','/sst.jpg'],hs:['02 · RESPETO','/hs.jpg']};
  const steps=[...document.querySelectorAll('.access-info li')];
  steps.forEach((li,i)=>li.firstElementChild.dataset.n='0'+(i+1));
  const chip=document.createElement('div');chip.className='session-chip';chip.setAttribute('role','timer');
@@ -304,7 +304,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  };
  const ico=k=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[k]+'</svg>';
  const data={
-  sst:{tab:'Seguridad y Salud en el Trabajo',kicker:'PREVENCIÓN Y BIENESTAR',img:'/salud.jpg',
+  sst:{tab:'Seguridad y Salud en el Trabajo',kicker:'PREVENCIÓN Y BIENESTAR',img:'/sst.jpg',
    lead:'Cuidar el trabajo también es cuidar a las personas.',
    what:'Es un equipo formado por representantes de la empresa y de los trabajadores, en igual número. Juntos revisan que el trabajo se haga de forma segura, detectan riesgos y proponen mejoras para prevenir accidentes y enfermedades.',
    vote:'Con tu voto eliges a quien llevará la voz de los trabajadores al comité: alguien que conozca lo que pasa en cada puesto y se anime a proponer cambios.',
@@ -313,7 +313,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
    quiz:[['El comité reemplaza la responsabilidad de la empresa en seguridad.',false,'La empresa sigue siendo responsable de garantizar la seguridad y salud. El comité ayuda, propone y vigila.'],['El comité puede investigar las causas de un accidente de trabajo.',true,'Es una de sus funciones: investigar y recomendar medidas para que no se repita.'],['Tu voto elige a quien representará a los trabajadores.',true,'Los trabajadores eligen a sus representantes. La empresa designa a los suyos.']],
    note:'La responsabilidad de garantizar la seguridad y salud sigue siendo del empleador; no se transfiere al comité.',
    source:'https://cdn.www.gob.pe/uploads/document/file/6575074/5722542-comite-sst_2024_lelvf-rev-1.pdf',label:'MTPE · Funciones del Comité de SST'},
-  hs:{tab:'Intervención frente al Hostigamiento Sexual',kicker:'DIGNIDAD Y RESPETO',img:'/equipo.jpg',
+  hs:{tab:'Intervención frente al Hostigamiento Sexual',kicker:'DIGNIDAD Y RESPETO',img:'/hs.jpg',
    lead:'Un entorno de respeto se construye con participación.',
    what:'Es el órgano que investiga los casos de hostigamiento sexual laboral y recomienda sanciones u otras medidas. Lo integran representantes de los trabajadores y de la empresa, respetando la paridad de género.',
    vote:'Con tu voto eliges a quien representará a los trabajadores en las investigaciones: una persona confiable, que actúe con reserva y trate a todos con respeto.',
@@ -345,7 +345,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 
 /* ===== Cédula tipo papeleta y confirmación ===== */
 (()=>{
- const pics={sst:'/salud.jpg',hs:'/equipo.jpg'};
+ const pics={sst:'/sst.jpg',hs:'/hs.jpg'};
  const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
  const initials=n=>{const w=n.trim().split(/\s+/);return (w[0][0]+(w[1]?w[1][0]:'')).toUpperCase();};
  const baseBallot2=ballot;
@@ -355,7 +355,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
   const form=$('#ballot');if(!form)return;
   const h2=content.querySelector('h2'),intro=h2&&h2.nextElementSibling;
   const head=document.createElement('div');head.className='ballot-head';
-  head.innerHTML='<img src="'+(pics[e.id]||'/equipo.jpg')+'" alt=""><div class="ballot-head-copy"><span>CÉDULA DE VOTACIÓN · '+esc(cfg.period||'')+'</span></div><div class="ballot-seal" aria-hidden="true"><b>'+(e.id==='sst'?'SST':'HS')+'</b><small>2026</small></div>';
+  head.innerHTML='<img src="'+(pics[e.id]||'/hs.jpg')+'" alt=""><div class="ballot-head-copy"><span>CÉDULA DE VOTACIÓN · '+esc(cfg.period||'')+'</span></div><div class="ballot-seal" aria-hidden="true"><b>'+(e.id==='sst'?'SST':'HS')+'</b><small>2026</small></div>';
   h2.before(head);head.querySelector('.ballot-head-copy').append(h2);
   if(intro&&intro.tagName==='P'){intro.textContent='Marca una sola opción. Puedes elegir una candidatura o votar en blanco.';head.querySelector('.ballot-head-copy').append(intro);}
   form.querySelectorAll('.candidate').forEach(label=>{
