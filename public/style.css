@@ -665,3 +665,9 @@ body.voting-mode nav{display:none!important}
 .js-pad{width:100%;max-width:600px;aspect-ratio:10/3;height:auto;border:1px dashed #b9a6b5;border-radius:10px;background:#fdfbfd;touch-action:none;display:block;margin-bottom:8px}
 .esc-name .cargo{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-style:normal;font-size:11px;font-weight:700;vertical-align:middle}
 .cargo.titular{background:#861079;color:#fff}.cargo.suplente{background:#f1e2ef;color:#6a0f60}.cargo.empate{background:#fbf0d9;color:#7a5a12}
+.js-pend{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.js-pend span{font-size:12px;font-weight:700;color:#7a5a12;background:#fbf0d9;border-radius:999px;padding:3px 10px}
+.js-here{font-size:13px;padding:9px 14px}
+.js-me{font-size:13px;margin:0 0 10px;color:#302732}
+.js-refresh{font-size:13px;padding:8px 14px;margin-bottom:12px}
+.js-warn{font-size:13px;color:#6b5320;background:#fbf5e6;border-radius:8px;padding:8px 12px;margin:0 0 6px}
