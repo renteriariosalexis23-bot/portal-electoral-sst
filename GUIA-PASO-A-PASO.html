@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guía paso a paso · Portal electoral IMAGE &amp; HEALTH</title>
+<style>
+ @page{size:A4;margin:14mm}
+ :root{--b:#861079;--p:#2a0c26;--m:#6b5a68;--l:#ecdbe8}
+ body{font:14px/1.6 Arial,Helvetica,sans-serif;color:#2b2129;max-width:820px;margin:24px auto;padding:0 18px;background:#fff}
+ h1{font-size:26px;color:var(--b);margin:0 0 4px}
+ .sub{color:var(--m);margin:0 0 18px}
+ h2{font-size:18px;color:#fff;background:var(--b);padding:8px 14px;border-radius:8px;margin:28px 0 10px;break-after:avoid}
+ h3{font-size:15px;color:var(--p);margin:18px 0 6px;break-after:avoid}
+ ol,ul{padding-left:22px}li{margin:4px 0}
+ code,.cmd{font-family:Consolas,"Courier New",monospace;background:#f6eef5;border:1px solid var(--l);border-radius:5px;padding:1px 6px;font-size:13px}
+ .cmd{display:block;padding:8px 12px;margin:6px 0;white-space:pre-wrap;word-break:break-all}
+ a{color:var(--b);word-break:break-all}
+ .box{border:1px solid var(--l);border-left:5px solid var(--b);border-radius:8px;padding:10px 14px;margin:12px 0;background:#fbf8fa}
+ .warn{border-left-color:#b45309;background:#fff8ec}
+ .ok{border-left-color:#2f9e6b;background:#effaf4}
+ table{border-collapse:collapse;width:100%;margin:8px 0}th,td{border:1px solid #cdbfca;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f3eaf1}
+ .check{list-style:none;padding-left:0}.check li:before{content:"☐  ";font-size:16px}
+ .toc{columns:2;font-size:13px}
+ @media print{body{margin:0}h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:#2b2129}}
+</style>
+
+<h1>Guía paso a paso · Portal electoral</h1>
+<p class="sub">IMAGE &amp; HEALTH S.A.C. · Elecciones de representantes 2026–2028 · Votación: 02 de noviembre de 2026, 9:00 a. m. – 4:00 p. m.</p>
+
+<div class="box"><b>Resumen:</b> el portal funciona en una <b>PC de la junta</b> que queda prendida el día de la elección. Un programa gratuito de Cloudflare le da una dirección de internet con HTTPS para que todos voten desde su celular o computadora. <b>Todo es gratis</b> y los datos no salen de esa PC.</div>
+
+<ol class="toc">
+ <li>Parte 1 · Instalar (una sola vez)</li>
+ <li>Parte 2 · Probar en modo prueba</li>
+ <li>Parte 3 · Dirección fija (opcional)</li>
+ <li>Parte 4 · Preparar la elección oficial</li>
+ <li>Parte 5 · Entregar tarjetas y claves</li>
+ <li>Parte 6 · Ensayo</li>
+ <li>Parte 7 · El día de la elección</li>
+ <li>Parte 8 · Cierre, escrutinio y acta</li>
+ <li>Parte 9 · Si algo falla</li>
+ <li>Lista de verificación</li>
+</ol>
+
+<h2>Parte 1 · Instalar en la PC de la junta (una sola vez)</h2>
+<p>Requisitos de la PC: Windows 10 u 11, internet estable (mejor por cable) y que pueda quedar prendida todo el día de la elección.</p>
+
+<h3>1.1 Descargar el portal</h3>
+<ol>
+ <li>Entra a GitHub con tu cuenta (el repositorio es tuyo): <a href="https://github.com/renteriariosalexis23-bot/portal-electoral-sst/tree/claude/vigilant-davinci-gb1kbk">github.com/renteriariosalexis23-bot/portal-electoral-sst</a> (rama <code>claude/vigilant-davinci-gb1kbk</code>).</li>
+ <li>Pulsa el botón verde <b>Code</b> → <b>Download ZIP</b>.<br>Enlace directo: <a href="https://github.com/renteriariosalexis23-bot/portal-electoral-sst/archive/refs/heads/claude/vigilant-davinci-gb1kbk.zip">descargar ZIP</a></li>
+ <li>Haz clic derecho en el ZIP → <b>Extraer todo</b> → elige <code>C:\</code>.</li>
+ <li>Cambia el nombre de la carpeta extraída a <code>portal-electoral</code>. Debe quedar <code>C:\portal-electoral</code> con archivos como <code>server.mjs</code> e <code>INICIAR.cmd</code> dentro.</li>
+</ol>
+
+<h3>1.2 Instalar Node.js (el motor del portal)</h3>
+<ol>
+ <li>Descarga desde <a href="https://nodejs.org/es/download">nodejs.org/es/download</a> el instalador <b>Windows Installer (.msi)</b>, versión <b>24 LTS</b> o superior.</li>
+ <li>Ábrelo y pulsa <b>Siguiente</b> en todo (deja las opciones por defecto).</li>
+ <li>Comprueba: abre el menú Inicio, escribe <b>cmd</b>, abre "Símbolo del sistema" y escribe:<span class="cmd">node -v</span>Debe responder <code>v24…</code> o un número mayor.</li>
+</ol>
+
+<h3>1.3 Instalar cloudflared (para publicar en internet)</h3>
+<ol>
+ <li>En "Símbolo del sistema" escribe:<span class="cmd">winget install --id Cloudflare.cloudflared</span></li>
+ <li>Si <code>winget</code> no funciona, descarga <b>cloudflared-windows-amd64.msi</b> desde <a href="https://github.com/cloudflare/cloudflared/releases/latest">github.com/cloudflare/cloudflared/releases/latest</a> e instálalo.</li>
+ <li><b>Cierra</b> el Símbolo del sistema y ábrelo de nuevo. Comprueba con:<span class="cmd">cloudflared --version</span></li>
+</ol>
+
+<h3>1.4 Preparar la PC para el día de la elección</h3>
+<ul>
+ <li>Configuración → Sistema → Inicio/apagado → Suspensión: <b>Nunca</b> (con corriente).</li>
+ <li>Windows Update → <b>Pausar actualizaciones</b> 1 semana (hazlo unos días antes del 2 de noviembre).</li>
+ <li>Que la PC tenga contraseña y solo la use la junta.</li>
+</ul>
+
+<h2>Parte 2 · Probar en modo prueba</h2>
+<ol>
+ <li>Entra a <code>C:\portal-electoral</code> y haz doble clic en <b>INICIAR-PUBLICO.cmd</b>.</li>
+ <li>Se abren dos ventanas negras. En la segunda aparece una dirección como <code>https://palabras-al-azar.trycloudflare.com</code>.</li>
+ <li>Abre esa dirección <b>desde tu celular con datos móviles</b> (no con el wifi de la oficina).</li>
+ <li>Prueba como trabajador: lee los dos comités (botón "He leído la información"), luego ingresa con <b>DNI <code>12345678</code></b> y <b>código <code>DEMO-2026</code></b>, vota y firma.</li>
+ <li>Prueba como junta: "Acceso de la junta" → elige un integrante → clave <b><code>JUNTA-DEMO</code></b>.</li>
+ <li>Para terminar, cierra las dos ventanas negras.</li>
+</ol>
+<div class="box warn">En modo prueba nada es oficial. Si algo no funciona, toma una captura de <b>las dos ventanas negras</b> y de la pantalla del celular.</div>
+
+<h2>Parte 3 · Dirección fija con el dominio de la empresa (opcional)</h2>
+<p>Sin este paso el portal funciona, pero con una dirección temporal que <b>cambia</b> cada vez que se reinicia. Para tener <code>https://elecciones.imagehealth.com.pe</code>:</p>
+<ol>
+ <li>Entrega el archivo <b>GUIA-DOMINIO.md</b> (está en la carpeta) a quien administra la página web de la empresa. Lo ideal es que lo haga <b>antes del 20 de octubre</b>.</li>
+ <li>Cuando te confirme que terminó, en la PC de la junta haz doble clic en <b>CONFIGURAR-TUNEL.cmd</b> y sigue lo que indica (se abre el navegador para autorizar).</li>
+ <li>Desde entonces, <b>INICIAR-PUBLICO.cmd</b> usará la dirección fija.</li>
+</ol>
+
+<h2>Parte 4 · Preparar la elección oficial</h2>
+
+<h3>4.1 Cómo abrir el "Símbolo del sistema" en la carpeta</h3>
+<p>Abre <code>C:\portal-electoral</code>, haz clic en la barra de direcciones de la ventana, escribe <b>cmd</b> y presiona Enter. Todos los comandos de esta parte se escriben ahí.</p>
+
+<h3>4.2 Cambiar a modo oficial</h3>
+<ol>
+ <li>Abre <code>config.json</code> con el Bloc de notas (clic derecho → Abrir con → Bloc de notas).</li>
+ <li>Cambia estas líneas (respeta comillas y comas):
+  <span class="cmd">"mode": "production",
+"approved": true,</span>
+  y, si tienes la dirección fija, agrega debajo:
+  <span class="cmd">"portalUrl": "https://elecciones.imagehealth.com.pe",</span></li>
+ <li>Revisa que las candidaturas, la fecha y el horario sean los aprobados. <b>Después de cargar el padrón ya no se pueden cambiar.</b></li>
+ <li>Revisa <code>junta.json</code>: deben estar los 4 integrantes con su nombre y cargo correctos.</li>
+</ol>
+
+<h3>4.3 Llenar el padrón en Excel</h3>
+<ol>
+ <li>Abre <b>padron-plantilla.xlsx</b>. Llena una fila por trabajador habilitado:
+  <table><tr><th>DNI</th><th>NOMBRE</th><th>SST</th><th>HS</th></tr><tr><td>45781236</td><td>María Pérez Rojas</td><td>SÍ</td><td>SÍ</td></tr><tr><td>70123459</td><td>José Quispe Huamán</td><td>SÍ</td><td>NO</td></tr></table>
+  SST y HS: <b>SÍ</b> o <b>NO</b> según el comité en que puede votar. NOMBRE solo se usa para imprimir la tarjeta.</li>
+ <li>Guárdalo como <b>padron.xlsx</b> dentro de <code>C:\portal-electoral</code>.</li>
+</ol>
+
+<h3>4.4 Revisar y cargar el padrón (antes del 2 de noviembre, 9:00 a. m.)</h3>
+<ol>
+ <li>Revisar sin guardar nada:<span class="cmd">node import-padron.mjs padron.xlsx --revisar</span>Si hay errores, te dice la fila exacta. Corrige el Excel y repite.</li>
+ <li>Cargar de verdad:<span class="cmd">node import-padron.mjs padron.xlsx</span>Se crea la carpeta <b>credenciales</b> con <b>tarjetas-FECHA.html</b> (tarjetas de los trabajadores y cargo de entrega).</li>
+ <li>Trabajadores que se agreguen después: añádelos al mismo Excel y repite el paso 2. Solo se generan tarjetas para los nuevos.</li>
+</ol>
+
+<h3>4.5 Generar las claves de la junta</h3>
+<span class="cmd">node claves-junta.mjs</span>
+<p>Crea en <b>credenciales</b> el archivo <b>claves-junta-todos-FECHA.html</b> con una tarjeta por integrante.</p>
+
+<h3>4.6 Imprimir</h3>
+<p>Abre cada archivo de la carpeta <b>credenciales</b> con doble clic (se abre en el navegador) y pulsa <b>Ctrl + P</b> para imprimir.</p>
+<div class="box warn"><b>La carpeta <code>credenciales</code> es secreta.</b> No la envíes por correo ni WhatsApp y no la subas a GitHub. Después de imprimir, guárdala en una USB bajo custodia de la junta.</div>
+
+<h2>Parte 5 · Entregar tarjetas y claves</h2>
+<ul>
+ <li><b>Trabajadores:</b> cada tarjeta (DNI + código) en <b>sobre cerrado</b>. El trabajador firma el <b>cargo de entrega</b> (última hoja del archivo de tarjetas).</li>
+ <li><b>Junta:</b> cada integrante recibe su clave personal en sobre cerrado.</li>
+ <li><b>La dirección del portal</b> sí se comparte libremente: WhatsApp, correo, afiches en las boticas.</li>
+ <li><b>Código perdido</b> (solo si esa persona aún no votó):<span class="cmd">node reemplazar-codigo.mjs 45781236 "María Pérez"</span><b>Clave de junta perdida</b> (ejemplo, presidente):<span class="cmd">node claves-junta.mjs presidente</span></li>
+</ul>
+
+<h2>Parte 6 · Ensayo (unos días antes)</h2>
+<p>Hazlo con config.json todavía en <code>"mode": "demo"</code> o en otra copia de la carpeta, para no tocar la base oficial.</p>
+<ol>
+ <li>Abre INICIAR-PUBLICO.cmd y comparte la dirección con 5 a 10 trabajadores.</li>
+ <li>Que voten desde su celular con el ingreso de prueba y te cuenten si algo no se entendió.</li>
+ <li>Prueba el panel de la junta y el escrutinio con dos integrantes.</li>
+</ol>
+
+<h2>Parte 7 · El día de la elección (02 de noviembre)</h2>
+<ol>
+ <li><b>Antes de las 8:30 a. m.</b>: conecta la PC por cable (y a un UPS si hay), enciéndela y haz doble clic en <b>INICIAR-PUBLICO.cmd</b>.</li>
+ <li>Comprueba desde tu celular con datos móviles que la dirección abre.</li>
+ <li>Comparte la dirección con todos los trabajadores (si usas la dirección temporal, compártela recién en ese momento).</li>
+ <li><b>No cierres las dos ventanas negras ni apagues la PC</b> hasta después de las 4:00 p. m.</li>
+ <li>Durante el día, la junta entra al panel (pestaña <b>¿Quién ya votó?</b>) para recordar a quienes les falta votar.</li>
+ <li>Si la PC se reinicia: vuelve a abrir INICIAR-PUBLICO.cmd. <b>Los votos ya registrados no se pierden.</b> Con la dirección temporal, compártela de nuevo.</li>
+</ol>
+
+<h2>Parte 8 · Cierre, escrutinio y acta (después de las 4:00 p. m.)</h2>
+<ol>
+ <li>Un integrante entra al panel → pestaña <b>Resultados</b>.</li>
+ <li>Elige a un <b>segundo integrante</b>, que escribe <b>su propia clave</b> → <b>Abrir escrutinio</b>.</li>
+ <li>Pulsa <b>Descargar acta de escrutinio</b>, ábrela e imprímela (Ctrl + P).</li>
+ <li>Los cuatro integrantes firman el acta impresa. La junta aplica las reglas aprobadas (titulares, suplentes, empates).</li>
+ <li>Copia a una USB la carpeta <code>data</code> (incluye <code>election.sqlite</code> y <code>respaldos</code>) y guárdala junto con el acta firmada.</li>
+ <li>Recién entonces cierra las ventanas negras.</li>
+</ol>
+
+<h2>Parte 9 · Si algo falla</h2>
+<table>
+ <tr><th>Problema</th><th>Qué hacer</th></tr>
+ <tr><td>"node" no se reconoce</td><td>Instala Node.js (paso 1.2) y vuelve a abrir la ventana.</td></tr>
+ <tr><td>"Falta instalar cloudflared"</td><td>Instálalo (paso 1.3) y vuelve a abrir INICIAR-PUBLICO.cmd.</td></tr>
+ <tr><td>La ventana del portal se cierra sola o muestra un error</td><td>Toma una captura del mensaje. En modo oficial el portal no arranca sin las claves de la junta (paso 4.5).</td></tr>
+ <tr><td>"La configuración cambió después de inicializar la base"</td><td>Se modificó config.json después de cargar el padrón. Deja config.json como estaba al cargarlo. No borres la base oficial.</td></tr>
+ <tr><td>La dirección no abre en el celular</td><td>Revisa que las dos ventanas negras sigan abiertas y que la PC tenga internet. Si cambió la dirección temporal, compártela de nuevo.</td></tr>
+ <tr><td>Un trabajador dice "DNI o código incorrecto"</td><td>Que revise su tarjeta (no confundir 0 con O: el código no usa la letra O ni el número 0). Tras 10 intentos fallidos su DNI se bloquea 15 minutos.</td></tr>
+ <tr><td>Un trabajador perdió su tarjeta</td><td>Parte 5: <code>reemplazar-codigo.mjs</code>.</td></tr>
+</table>
+
+<h2>Lista de verificación</h2>
+<ul class="check">
+ <li>Portal descargado en <code>C:\portal-electoral</code></li>
+ <li>Node.js 24 instalado (<code>node -v</code>)</li>
+ <li>cloudflared instalado (<code>cloudflared --version</code>)</li>
+ <li>Prueba desde celular con datos móviles: OK</li>
+ <li>(Opcional) Dirección fija configurada</li>
+ <li>config.json en production, approved true, candidaturas y fechas revisadas</li>
+ <li>junta.json revisado</li>
+ <li>Padrón revisado (<code>--revisar</code>) y cargado</li>
+ <li>Claves de la junta generadas</li>
+ <li>Tarjetas y claves impresas y entregadas en sobre cerrado, cargo firmado</li>
+ <li>Carpeta credenciales guardada en USB</li>
+ <li>Ensayo realizado</li>
+ <li>PC: sin suspensión, actualizaciones pausadas, cable y UPS</li>
+ <li>Día de la elección: INICIAR-PUBLICO.cmd abierto antes de las 8:30</li>
+ <li>Acta impresa y firmada; carpeta data copiada a USB</li>
+</ul>
+</html>
