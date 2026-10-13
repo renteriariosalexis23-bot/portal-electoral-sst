@@ -2,6 +2,13 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 title Actualizar portal electoral
+echo %~dp0| findstr /i /c:"\Temp\" /c:"\Rar$" /c:"\Downloads\" /c:"\Descargas\" >nul && (
+  echo ESTE ARCHIVO SE ABRIO DESDE EL ZIP, DESCARGAS O UNA CARPETA TEMPORAL.
+  echo Debe estar dentro de la carpeta del portal, por ejemplo C:\portal-electoral,
+  echo junto a INICIAR-PUBLICO.cmd. No se hizo ningun cambio.
+  pause
+  exit /b 1
+)
 if not exist "%~dp0config.json" (
   echo ESTE ARCHIVO DEBE ESTAR DENTRO DE LA CARPETA DEL PORTAL,
   echo junto a INICIAR-PUBLICO.cmd ^(por ejemplo C:\portal-electoral^).
