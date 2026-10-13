@@ -501,3 +501,37 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
   select(groups[prev]?prev:'resumen');
  };
 })();
+
+/* ===== "¿Cuándo actúa el comité?" como recorrido interactivo ===== */
+(()=>{
+ const panel=document.getElementById('ex-panel');if(!panel)return;
+ const still=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function enhance(){
+  const ol=panel.querySelector('ol.ex-flow');if(!ol||panel.querySelector('.flow-x'))return;
+  const steps=[...ol.children].map(li=>({icon:li.querySelector('.ex-node').innerHTML,label:li.querySelector('.ex-sit small').textContent.replace(/\s*\d+$/,''),sit:li.querySelector('.ex-sit b').textContent,act:li.querySelector('.ex-act p').textContent}));
+  const box=document.createElement('div');box.className='flow-x';
+  box.innerHTML='<div class="flow-nodes"><span class="flow-line"><i></i></span>'+steps.map((s,i)=>'<button type="button" class="flow-node" data-i="'+i+'" aria-label="'+esc(s.label)+' '+(i+1)+'">'+s.icon+'</button>').join('')+'</div>'+
+   '<div class="flow-stage" aria-live="polite"><div class="flow-sit"><small></small><b></b></div><button type="button" class="flow-reveal"><span class="flow-q">?</span><span>¿Qué hace el comité? <em>Toca para descubrirlo</em></span></button><div class="flow-act" hidden><small>QUÉ HACE EL COMITÉ</small><p></p></div><div class="flow-nav"><button type="button" class="flow-prev">← Anterior</button><span class="flow-count"></span><button type="button" class="flow-next primary">Siguiente →</button></div></div>';
+  ol.replaceWith(box);
+  const nodes=[...box.querySelectorAll('.flow-node')],seen=new Set();let cur=0;
+  const $$=s=>box.querySelector(s);
+  function anim(el,kf){if(!still())el.animate(kf,{duration:380,easing:'cubic-bezier(.2,.7,.2,1)'});}
+  function go(i){
+   cur=i;const s=steps[i];
+   nodes.forEach((n,k)=>{n.classList.toggle('active',k===i);n.classList.toggle('seen',seen.has(k)&&k!==i);n.setAttribute('aria-current',k===i?'step':'false');});
+   $$('.flow-line i').style.setProperty('width',(steps.length>1?100*i/(steps.length-1):0)+'%');
+   $$('.flow-sit small').textContent=s.label+' '+(i+1)+' de '+steps.length;$$('.flow-sit b').textContent=s.sit;
+   $$('.flow-act p').textContent=s.act;$$('.flow-act').hidden=true;$$('.flow-reveal').hidden=false;
+   $$('.flow-prev').disabled=i===0;$$('.flow-count').textContent=(i+1)+' / '+steps.length;
+   $$('.flow-next').textContent=i===steps.length-1?'Volver al inicio ↺':'Siguiente →';
+   anim($$('.flow-sit'),[{opacity:0,transform:'translateX(24px)'},{opacity:1,transform:'none'}]);
+  }
+  function reveal(){seen.add(cur);$$('.flow-reveal').hidden=true;$$('.flow-act').hidden=false;nodes[cur].classList.add('seen');anim($$('.flow-act'),[{opacity:0,transform:'translateY(16px) scale(.97)'},{opacity:1,transform:'none'}]);}
+  nodes.forEach((n,i)=>n.onclick=()=>go(i));
+  $$('.flow-reveal').onclick=reveal;
+  $$('.flow-prev').onclick=()=>go(Math.max(0,cur-1));
+  $$('.flow-next').onclick=()=>go(cur===steps.length-1?0:cur+1);
+  go(0);
+ }
+ new MutationObserver(enhance).observe(panel,{childList:true});enhance();
+})();
