@@ -3,7 +3,7 @@ import {readFileSync,mkdirSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
-import {openDB,hash,vote,signParticipation} from './core.mjs';
+import {openDB,hash,vote,signParticipation,checkStrokes} from './core.mjs';
 import {credential,normalizeDni,boardKey,loadPadron} from './padron.mjs';
 const root=dirname(fileURLToPath(import.meta.url)),cfg=JSON.parse(readFileSync(join(root,'config.json')));
 const demo=cfg.mode==='demo';
@@ -18,6 +18,8 @@ const admin=process.env.ADMIN_KEY||randomBytes(32).toString('hex');
 if(demo&&!db.prepare('SELECT COUNT(*) n FROM board').get().n&&existsSync(join(root,'junta.json'))){const ins=db.prepare('INSERT INTO board VALUES(?,?,?,?)');for(const m of JSON.parse(readFileSync(join(root,'junta.json'))))ins.run(m.id,m.name,m.role,hash(boardKey(m.id,'JUNTA-DEMO')));}
 if(!demo&&db.prepare('SELECT COUNT(*) n FROM board').get().n<2)throw Error('Genera las claves de la junta con: node claves-junta.mjs');
 const boardList=()=>db.prepare('SELECT id,name,role FROM board ORDER BY rowid').all();
+/* Firmas de cierre: cada integrante de la junta firma después del escrutinio; las actas se descargan con todas. */
+const boardSigs=()=>db.prepare('SELECT b.id,b.name,b.role,s.strokes,s.signed_at FROM board b LEFT JOIN board_signatures s ON s.member=b.id ORDER BY b.rowid').all().map(m=>({id:m.id,name:m.name,role:m.role,signedAt:m.signed_at||null,strokes:m.strokes?JSON.parse(m.strokes):null}));
 const lastSeen=new Map();
 function member(k){
  if(demo&&typeof k==='string'&&equal(k,admin))return {id:'demo',name:'Clave temporal',role:'Prueba'};
@@ -73,7 +75,7 @@ const server=http.createServer(async(req,res)=>{
    if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:key,expires:Date.now()+1800000});return send(200,{token});
   }
-  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/demo-cierre'||path==='/api/admin-signatures'||path==='/api/escrutinio'){
+  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/junta-firmas'||path==='/api/junta-firmar'||path==='/api/demo-cierre'||path==='/api/admin-signatures'||path==='/api/escrutinio'){
    const ak='admin:'+clientIp(req);guard(ak);
    const who=member(body.key);
    if(!who){fail(ak);return send(401,{error:demo?'Clave incorrecta. En modo prueba la clave de la junta es JUNTA-DEMO (no es el código de los trabajadores).':'Clave incorrecta para ese integrante. Revisa la tarjeta de tu clave personal.'});}
@@ -84,9 +86,21 @@ const server=http.createServer(async(req,res)=>{
     if(second.id===who.id)return send(400,{error:'Se necesitan dos integrantes distintos de la junta.'});
     if(!demo&&Date.now()<Date.parse(cfg.closes))return send(400,{error:'El escrutinio se abre después del cierre de la votación.'});
     db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('ESCRUTINIO_ABIERTO '+who.role+' + '+second.role,new Date().toISOString());
-    return send(200,{demo,openedBy:[who,second].map(m=>({name:m.name,role:m.role})),openedAt:new Date().toISOString(),board:boardList(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:results(e)}))});
+    return send(200,{demo,openedBy:[who,second].map(m=>({name:m.name,role:m.role})),openedAt:new Date().toISOString(),board:boardList(),signatures:boardSigs(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:results(e)}))});
    }
-   if(path==='/api/demo-cierre'){if(!demo)return send(403,{error:'Solo disponible en modo prueba.'});demoClosedAt=body.closed===true?new Date().toISOString():null;db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run((demoClosedAt?'PRUEBA_CIERRE_SIMULADO ':'PRUEBA_REAPERTURA ')+who.role+' · '+who.name,new Date().toISOString());return send(200,{closed:!!demoClosedAt});}
+   if(path==='/api/junta-firmas')return send(200,{signatures:boardSigs()});
+   if(path==='/api/junta-firmar'){
+    if(who.id==='demo')return send(400,{error:'Firma con la clave personal de un integrante de la junta.'});
+    if(!demo&&phase()!=='cerrada')return send(400,{error:'La junta firma después del cierre de la votación.'});
+    if(!db.prepare("SELECT 1 FROM audit WHERE event LIKE 'ESCRUTINIO_ABIERTO%'").get())return send(400,{error:'Primero abran el escrutinio con dos integrantes.'});
+    if(body.accepted!==true)return send(400,{error:'Marca la casilla de conformidad para firmar.'});
+    if(db.prepare('SELECT 1 FROM board_signatures WHERE member=?').get(who.id))return send(400,{error:who.role+' ya firmó.'});
+    let strokes;try{strokes=checkStrokes(body.strokes);}catch(e){return send(400,{error:e.message});}
+    const at=new Date().toISOString();db.prepare('INSERT INTO board_signatures(member,strokes,signed_at) VALUES(?,?,?)').run(who.id,JSON.stringify(strokes),at);
+    db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('JUNTA_FIRMA '+who.role+' · '+who.name,at);
+    return send(200,{signatures:boardSigs()});
+   }
+   if(path==='/api/demo-cierre'){if(!demo)return send(403,{error:'Solo disponible en modo prueba.'});demoClosedAt=body.closed===true?new Date().toISOString():null;if(!demoClosedAt)db.exec('DELETE FROM board_signatures');db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run((demoClosedAt?'PRUEBA_CIERRE_SIMULADO ':'PRUEBA_REAPERTURA ')+who.role+' · '+who.name,new Date().toISOString());return send(200,{closed:!!demoClosedAt});}
    if(path==='/api/admin-signatures'){db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('LISTA_FIRMAS_DESCARGADA '+who.role+' · '+who.name,new Date().toISOString());return send(200,{company:cfg.company,period:cfg.period,demo,generatedAt:new Date().toISOString(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,voted:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,signatures:db.prepare('SELECT payload,checksum FROM signatures WHERE election=?').all(e.id).map(r=>{const x=JSON.parse(r.payload);return{employee:x.employee,signerName:x.signerName,signedAt:x.signedAt,strokes:x.strokes,checksum:r.checksum};}).sort((a,b)=>a.signedAt.localeCompare(b.signedAt))}))});}
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
    const closed=demo?!!demoClosedAt:Date.now()>=Date.parse(cfg.closes);

@@ -181,6 +181,16 @@ test('junta: clave por integrante, registro de ingresos y escrutinio con dos int
   const sst=esc.data.elections.find(e=>e.id==='sst');assert.equal(sst.results.total,1);assert.equal(sst.results.candidates.find(c=>c.id==='s2').votes,1);
   assert.deepEqual(esc.data.openedBy.map(m=>m.role),['Presidente','Secretaria']);
   const events=(await api('admin',{key:sec})).data.events.map(e=>e.event).join('\n');
+  const firma=[Array.from({length:12},(_,i)=>[0.1+i*0.06,i%2?0.3:0.6])];
+  assert.equal(esc.data.signatures.length,4);assert.ok(esc.data.signatures.every(m=>!m.signedAt));
+  assert.equal((await api('junta-firmar',{key:{member:'vocal1',key:'MAL'},strokes:firma,accepted:true})).status,401);
+  assert.equal((await api('junta-firmar',{key:pres,strokes:firma,accepted:false})).status,400);
+  assert.equal((await api('junta-firmar',{key:pres,strokes:[[[0.1,0.1],[0.11,0.1]]],accepted:true})).status,400);
+  for(const m of ['presidente','secretaria','vocal1'])assert.equal((await api('junta-firmar',{key:{member:m,key:'JUNTA-DEMO'},strokes:firma,accepted:true})).status,200);
+  assert.match((await api('junta-firmar',{key:pres,strokes:firma,accepted:true})).data.error,/ya firmó/);
+  let sigs=(await api('junta-firmas',{key:sec})).data.signatures;assert.deepEqual(sigs.map(m=>!!m.signedAt),[true,true,true,false]);
+  sigs=(await api('junta-firmar',{key:{member:'vocal2',key:'JUNTA-DEMO'},strokes:firma,accepted:true})).data.signatures;assert.ok(sigs.every(m=>m.signedAt&&m.strokes.length));
+  assert.match((await api('admin',{key:sec})).data.events.map(e=>e.event).join('\n'),/JUNTA_FIRMA Vocal 2/);
   assert.match(events,/JUNTA_INGRESO Presidente/);assert.match(events,/ESCRUTINIO_ABIERTO Presidente \+ Secretaria/);assert.match(events,/JUNTA_INGRESO Secretaria/);
  }finally{const e=new Promise(r=>child.once('exit',r));child.kill();await e;rmSync(dir,{recursive:true,force:true});}
 });
