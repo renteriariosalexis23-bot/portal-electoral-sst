@@ -572,3 +572,11 @@ body,button,input,select{font-family:var(--sans)}
 .jpanel .activity summary{pointer-events:none}
 .jpanel .activity summary::marker{content:""}
 @media(max-width:600px){.jtabs button{flex:1 1 45%;font-size:13px;padding:10px}}
+
+/* Aviso previo al ingreso */
+.gate-list{list-style:none;padding:0;margin:16px 0 22px;display:grid;gap:10px}
+.gate-list li{display:flex;align-items:center;gap:12px;margin:0;padding:12px 14px;border-radius:12px;border:1px dashed #d9b5d2;font-weight:600;color:#5b4f59}
+.gate-list li span{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;border:2px solid #cdb9ca;color:#fff;font-size:14px;padding:0!important}
+.gate-list li.ok{border-style:solid;border-color:#bfe3cf;background:#effaf4;color:#1e7a4d}
+.gate-list li.ok span{background:#2f9e6b;border-color:#2f9e6b}
+#content h2[tabindex="-1"]:focus{outline:none}
