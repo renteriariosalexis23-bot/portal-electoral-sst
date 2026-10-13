@@ -643,3 +643,24 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
   content.querySelectorAll('[data-election]').forEach(b=>{if(!status.voted.includes(b.dataset.election)){b.disabled=true;b.textContent='Primero firma tu constancia';}});
  };
 })();
+
+/* Cierre de la votación: aviso al trabajador y, en modo prueba, botón para simular el cierre. */
+(()=>{
+ const baseDash4=dashboard;
+ dashboard=async function(){
+  await baseDash4();
+  if(!status||(status.phase!=='cerrada'&&status.phase!=='antes'))return;
+  const closed=status.phase==='cerrada';
+  const h=content.querySelector('h2');
+  if(h)h.insertAdjacentHTML('afterend','<div class="closed-box" role="status"><b>'+(closed?'La votación está cerrada.':'La votación aún no empieza.')+'</b><span>'+(closed?'Terminó a las 4:00 p. m. Ya no se reciben votos. Gracias por participar.':'Se abre el lunes 2 de noviembre a las 9:00 a. m.')+(closed&&(status.voted||[]).length?' Puedes descargar tus constancias abajo.':'')+'</span></div>');
+  content.querySelectorAll('[data-election]').forEach(b=>{if(!status.voted.includes(b.dataset.election)){b.disabled=true;b.textContent=closed?'Votación cerrada':'Aún no empieza';}});
+ };
+ const baseAdmin5=renderAdmin;
+ renderAdmin=function(report,key){
+  baseAdmin5(report,key);
+  if(!report.demo)return;
+  const head=content.querySelector('.admin-heading');if(!head)return;
+  head.insertAdjacentHTML('afterend','<div class="demo-close"><div><b>Modo prueba · '+(report.closed?'votación CERRADA (simulada)':'votación abierta')+'</b><span>'+(report.closed?'Así se verá después de las 4:00 p. m.: nadie puede votar y la junta abre el escrutinio. Pulsa “Reabrir” para seguir probando.':'Simula las 4:00 p. m. para ver cómo se cierra la votación. En la elección real se cierra sola.')+'</span></div><button id="demo-close-btn" class="'+(report.closed?'':'primary')+'">'+(report.closed?'Reabrir votación (prueba)':'Simular cierre de votación')+'</button></div>');
+  $('#demo-close-btn').onclick=async e=>{e.currentTarget.disabled=true;try{await api('demo-cierre',{key,closed:!report.closed});const c=await (await fetch('/api/config')).json();cfg.closes=c.closes;renderAdmin(await api('admin',{key}),key);notice(report.closed?'Votación reabierta (prueba).':'Votación cerrada (simulación). Ahora entra como trabajador para ver lo que verán ellos.');}catch(err){notice(err.message);e.currentTarget.disabled=false;}};
+ };
+})();

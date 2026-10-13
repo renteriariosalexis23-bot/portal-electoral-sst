@@ -40,7 +40,10 @@ const backupDir=join(root,'data','respaldos');mkdirSync(backupDir,{recursive:tru
 function backup(){try{const f=join(backupDir,(demo?'demo-':'eleccion-')+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'')+'.sqlite');if(!existsSync(f)){db.exec("VACUUM INTO '"+f.replace(/'/g,"''")+"'");console.log('Respaldo guardado: '+f);}}catch(e){console.error('No se pudo guardar el respaldo: '+e.message);}}
 backup();setInterval(backup,15*60000).unref();
 const demoElections=cfg.elections.map(e=>({...e,ready:true,pendingReason:undefined}));
-const clockConfig=demo?{...cfg,elections:demoElections,opens:'2020-01-01T00:00:00Z',closes:'2099-01-01T00:00:00Z'}:cfg;
+/* En modo prueba la votación está siempre abierta, salvo que la junta simule el cierre desde su panel. */
+let demoClosedAt=null;
+const clock=()=>demo?{...cfg,elections:demoElections,opens:'2020-01-01T00:00:00Z',closes:demoClosedAt||'2099-01-01T00:00:00Z'}:cfg;
+const phase=()=>{const c=clock(),n=Date.now();return n<Date.parse(c.opens)?'antes':n>=Date.parse(c.closes)?'cerrada':'abierta';};
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function guard(key,max=30){const v=attempts.get(key);if(v&&v.end>Date.now()&&v.n>=max)throw Error('Demasiados intentos. Espera 15 minutos.');}
 function fail(key){const old=attempts.get(key);const v=old&&old.end>Date.now()?old:{n:0,end:Date.now()+900000};v.n++;attempts.set(key,v);}
@@ -54,7 +57,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&['/','/app.js','/style.css'].includes(path)){res.writeHead(200,{'Content-Type':path==='/'?'text/html; charset=utf-8':path.endsWith('.js')?'text/javascript; charset=utf-8':'text/css; charset=utf-8'});return res.end(readFileSync(join(root,'public',path==='/'?'index.html':path.slice(1))));}
   const assets={'/portada-corregida.png':'image/png','/portada-image-health.jpg':'image/jpeg','/logo.png':'image/png','/equipo.jpg':'image/jpeg','/salud.jpg':'image/jpeg','/sst.jpg':'image/jpeg','/hs.jpg':'image/jpeg','/membrete.jpg':'image/jpeg','/fonts/jakarta.woff2':'font/woff2','/fonts/fraunces.woff2':'font/woff2','/fonts/fraunces-italic.woff2':'font/woff2'};
   if(req.method==='GET'&&assets[path]){res.writeHead(200,{'Content-Type':assets[path]});return res.end(readFileSync(join(root,'public',path.slice(1))));}
-  if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,board:boardList(),serverTime:new Date().toISOString()});
+  if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,...(demo&&demoClosedAt?{closes:demoClosedAt}:{}),board:boardList(),serverTime:new Date().toISOString()});
   if(req.method!=='POST')return send(404,{error:'No encontrado.'});
   if(req.headers['content-type']!=='application/json')return send(415,{error:'Formato inválido.'});
   if(req.headers.origin&&!sameOrigin(req,req.headers.origin))return send(403,{error:'Origen inválido.'});
@@ -70,7 +73,7 @@ const server=http.createServer(async(req,res)=>{
    if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:key,expires:Date.now()+1800000});return send(200,{token});
   }
-  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/admin-signatures'||path==='/api/escrutinio'){
+  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/demo-cierre'||path==='/api/admin-signatures'||path==='/api/escrutinio'){
    const ak='admin:'+clientIp(req);guard(ak);
    const who=member(body.key);
    if(!who){fail(ak);return send(401,{error:demo?'Clave incorrecta. En modo prueba la clave de la junta es JUNTA-DEMO (no es el código de los trabajadores).':'Clave incorrecta para ese integrante. Revisa la tarjeta de tu clave personal.'});}
@@ -83,9 +86,10 @@ const server=http.createServer(async(req,res)=>{
     db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('ESCRUTINIO_ABIERTO '+who.role+' + '+second.role,new Date().toISOString());
     return send(200,{demo,openedBy:[who,second].map(m=>({name:m.name,role:m.role})),openedAt:new Date().toISOString(),board:boardList(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:results(e)}))});
    }
+   if(path==='/api/demo-cierre'){if(!demo)return send(403,{error:'Solo disponible en modo prueba.'});demoClosedAt=body.closed===true?new Date().toISOString():null;db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run((demoClosedAt?'PRUEBA_CIERRE_SIMULADO ':'PRUEBA_REAPERTURA ')+who.role+' · '+who.name,new Date().toISOString());return send(200,{closed:!!demoClosedAt});}
    if(path==='/api/admin-signatures'){db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('LISTA_FIRMAS_DESCARGADA '+who.role+' · '+who.name,new Date().toISOString());return send(200,{company:cfg.company,period:cfg.period,demo,generatedAt:new Date().toISOString(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,voted:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,signatures:db.prepare('SELECT payload,checksum FROM signatures WHERE election=?').all(e.id).map(r=>{const x=JSON.parse(r.payload);return{employee:x.employee,signerName:x.signerName,signedAt:x.signedAt,strokes:x.strokes,checksum:r.checksum};}).sort((a,b)=>a.signedAt.localeCompare(b.signedAt))}))});}
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
-   const closed=Date.now()>=Date.parse(cfg.closes);
+   const closed=demo?!!demoClosedAt:Date.now()>=Date.parse(cfg.closes);
    const voters=db.prepare('SELECT code_hash,employee,eligible,name FROM voters ORDER BY employee').all().map(v=>({employee:v.employee,name:v.name||'',signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(v.code_hash).map(s=>s.election),eligible:JSON.parse(v.eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(v.code_hash).map(p=>p.election)}));
    return send(200,{demo,closed,member:{name:who.name,role:who.role},voters,elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:null})),events:db.prepare('SELECT event,time FROM audit ORDER BY id').all()});
   }
@@ -94,11 +98,12 @@ const server=http.createServer(async(req,res)=>{
   if(path==='/api/logout'){sessions.delete(token);return send(200,{ok:true});}
   if(path==='/api/sign')return send(200,signParticipation(db,cfg,session.code,body));
   if(path==='/api/receipt'){const row=db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(hash(session.code),body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
-  if(path==='/api/status')return send(200,{signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(hash(session.code)).map(s=>s.election),eligible:JSON.parse(db.prepare('SELECT eligible FROM voters WHERE code_hash=?').get(hash(session.code)).eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(hash(session.code)).map(v=>v.election)});
+  if(path==='/api/status')return send(200,{phase:phase(),signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(hash(session.code)).map(s=>s.election),eligible:JSON.parse(db.prepare('SELECT eligible FROM voters WHERE code_hash=?').get(hash(session.code)).eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(hash(session.code)).map(v=>v.election)});
   if(path==='/api/vote'){
+  if(phase()!=='abierta')return send(400,{error:'La votación está cerrada.'});
    const unsigned=db.prepare('SELECT p.election FROM participation p LEFT JOIN signatures s ON s.code_hash=p.code_hash AND s.election=p.election WHERE p.code_hash=? AND s.code_hash IS NULL').get(hash(session.code));
    if(unsigned)return send(400,{error:'Primero firma la constancia de tu voto anterior ('+((cfg.elections.find(e=>e.id===unsigned.election)||{}).title||unsigned.election)+').'});
-   vote(db,clockConfig,session.code,body.election,body.selection);return send(200,{ok:true});}
+   vote(db,clock(),session.code,body.election,body.selection);return send(200,{ok:true});}
   send(404,{error:'No encontrado.'});
  }catch(err){send(400,{error:err.code?'No se pudo completar la operación.':err.message});}
 });

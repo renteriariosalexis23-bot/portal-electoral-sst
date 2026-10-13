@@ -61,6 +61,13 @@ const receipt=(await api('admin-receipt',{key,employee:'12345678',election:'sst'
 assert.equal((await api('admin-signatures',{key:'wrong'})).status,401);
 const all=(await api('admin-signatures',{key})).data;assert.equal(all.elections.find(e=>e.id==='sst').signatures[0].employee,'12345678');assert.ok(all.elections.find(e=>e.id==='sst').signatures[0].strokes.length);assert.ok(!JSON.stringify(all).includes('selection'));
 assert.equal((await api('receipt',{election:'sst'},token)).data.id,receipt.id);
+assert.equal((await api('status',{},token)).data.phase,'abierta');
+assert.equal((await api('demo-cierre',{key:'wrong',closed:true})).status,401);
+assert.equal((await api('demo-cierre',{key,closed:true})).data.closed,true);
+assert.equal((await api('status',{},token)).data.phase,'cerrada');assert.equal((await api('admin',{key})).data.closed,true);
+assert.match((await api('vote',{election:'hs',selection:[]},token)).data.error,/cerrada/);
+assert.ok(Date.parse((await (await fetch('http://127.0.0.1:18787/api/config')).json()).closes)<=Date.now());
+assert.equal((await api('demo-cierre',{key,closed:false})).data.closed,false);assert.equal((await api('status',{},token)).data.phase,'abierta');
 await api('logout',{},token);assert.equal((await api('status',{},token)).status,401);
  }finally{
   const ended=new Promise(resolve=>child.once('exit',resolve));child.kill();await ended;rmSync(dir,{recursive:true,force:true});
