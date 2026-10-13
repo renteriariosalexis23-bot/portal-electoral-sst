@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 title Actualizar portal electoral
-if not exist "%~dp0server.mjs" (
+if not exist "%~dp0config.json" (
   echo ESTE ARCHIVO DEBE ESTAR DENTRO DE LA CARPETA DEL PORTAL,
   echo junto a INICIAR-PUBLICO.cmd ^(por ejemplo C:\portal-electoral^).
   echo Muevelo alli y vuelve a abrirlo. No se hizo ningun cambio.
