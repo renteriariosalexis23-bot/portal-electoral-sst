@@ -547,3 +547,15 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  };
  new MutationObserver(sync).observe(content,{childList:true});sync();
 })();
+
+/* ===== Botón "Mostrar" en las claves de la junta ===== */
+(()=>{
+ function addToggle(input){
+  if(!input||input.closest('.pw-wrap'))return;
+  const wrap=document.createElement('div');wrap.className='pw-wrap';input.before(wrap);wrap.append(input);
+  const t=document.createElement('button');t.type='button';t.className='pw-toggle';t.textContent='Mostrar';t.setAttribute('aria-label','Mostrar u ocultar la clave');
+  t.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';t.textContent=show?'Ocultar':'Mostrar';input.focus();};
+  wrap.append(t);
+ }
+ new MutationObserver(()=>{addToggle(document.getElementById('key'));addToggle(document.getElementById('esc-key'));}).observe(content,{childList:true,subtree:true});
+})();

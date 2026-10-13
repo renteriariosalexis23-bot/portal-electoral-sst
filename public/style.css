@@ -621,3 +621,4 @@ body.voting-mode #acceso .access-panel{width:100%}
 body.voting-mode .scroll-progress{display:none}
 @media(max-width:600px){body.voting-mode #acceso{padding:20px 12px 40px}}
 body.voting-mode nav{display:none!important}
+#adminform .pw-wrap input#key,.esc-form .pw-wrap input{padding-right:96px}

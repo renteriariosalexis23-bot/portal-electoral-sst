@@ -71,7 +71,7 @@ const server=http.createServer(async(req,res)=>{
   if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/escrutinio'){
    const ak='admin:'+clientIp(req);guard(ak);
    const who=member(body.key);
-   if(!who){fail(ak);return send(401,{error:'Integrante o clave incorrecta.'});}
+   if(!who){fail(ak);return send(401,{error:demo?'Clave incorrecta. En modo prueba la clave de la junta es JUNTA-DEMO (no es el código de los trabajadores).':'Clave incorrecta para ese integrante. Revisa la tarjeta de tu clave personal.'});}
    if(path==='/api/admin'&&!(lastSeen.get(who.id)>Date.now()-600000)){lastSeen.set(who.id,Date.now());db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('JUNTA_INGRESO '+who.role+' · '+who.name,new Date().toISOString());}
    if(path==='/api/escrutinio'){
     const second=member(body.second);
