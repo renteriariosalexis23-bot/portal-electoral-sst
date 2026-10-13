@@ -32,6 +32,8 @@ const jsonFile=new URL(pre+'credenciales-'+stamp+'.json',dir),htmlFile=new URL(p
 db.exec('BEGIN IMMEDIATE');
 try{
  db.prepare('INSERT OR IGNORE INTO config VALUES(1,?)').run(JSON.stringify(cfg));
+ /* En el ensayo con datos reales se quita el trabajador de ejemplo (si no votó). */
+ if(demo&&!rows.some(r=>r.employee==='12345678'))db.prepare('DELETE FROM voters WHERE employee=? AND code_hash=? AND NOT EXISTS(SELECT 1 FROM participation p WHERE p.code_hash=voters.code_hash)').run('12345678',hash(credential('12345678','DEMO-2026')));
  const ins=db.prepare('INSERT INTO voters(code_hash,employee,eligible,name) VALUES(?,?,?,?)');
  for(const r of out)ins.run(hash(credential(r.employee,r.code)),r.employee,JSON.stringify(r.eligible),r.name||'');
  writeFileSync(jsonFile,JSON.stringify(out.map(({employee,name,eligible,code})=>({dni:employee,name,eligible,code})),null,2),{flag:'wx',mode:0o600});

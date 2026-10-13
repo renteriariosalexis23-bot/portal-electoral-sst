@@ -28,7 +28,7 @@ function member(k){
  return m&&equal(hash(boardKey(m.id,k.key)),m.key_hash)?m:null;
 }
 function results(e){const rows=db.prepare('SELECT selection FROM ballots WHERE election=?').all(e.id).map(b=>JSON.parse(b.selection));return {total:rows.length,blank:rows.filter(r=>!r.length).length,candidates:e.candidates.map(c=>({id:c.id,number:c.number,name:c.name,votes:rows.filter(r=>r.includes(c.id)).length}))};}
-if(demo){db.prepare("INSERT OR IGNORE INTO voters(code_hash,employee,eligible,name) VALUES(?,?,?,'Trabajador de prueba')").run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nJunta de prueba: elige cualquier integrante · clave JUNTA-DEMO');}
+if(demo&&!db.prepare('SELECT COUNT(*) n FROM voters').get().n){db.prepare("INSERT OR IGNORE INTO voters(code_hash,employee,eligible,name) VALUES(?,?,?,'Trabajador de prueba')").run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nJunta de prueba: elige cualquier integrante · clave JUNTA-DEMO');}
 /* Completa los nombres del panel de la junta con padron.xlsx (no agrega ni quita trabajadores). */
 for(const f of ['padron.xlsx','padron.csv'])if(existsSync(join(root,f))){try{const set=db.prepare("UPDATE voters SET name=? WHERE employee=? AND name=''");let n=0;for(const r of loadPadron(join(root,f),cfg.elections).rows)if(r.name)n+=Number(set.run(r.name,r.employee).changes);if(n)console.log('Nombres cargados desde '+f+': '+n+'.');}catch(e){console.log('No se pudieron leer los nombres de '+f+': '+e.message);}break;}
 db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('SERVER_START',new Date().toISOString());
