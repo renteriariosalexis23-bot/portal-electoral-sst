@@ -8,3 +8,4 @@ padron*.xlsx
 padron*.csv
 !padron-plantilla.xlsx
 data/respaldos/
+DIRECCION-ACTUAL.txt

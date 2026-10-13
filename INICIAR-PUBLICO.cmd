@@ -16,13 +16,13 @@ timeout /t 4 /nobreak >nul
 
 cloudflared tunnel info elecciones >nul 2>nul && goto fija
 echo ================================================================
-echo  (Tunel temporal) En unos segundos aparecera abajo la direccion:
-echo      https://....trycloudflare.com
+echo  (Tunel temporal) En unos segundos aparecera abajo la direccion,
+echo  se copiara sola y se abrira en el navegador.
 echo  Compartela con los trabajadores. NO cierres ninguna de las dos
 echo  ventanas hasta que termine la votacion.
 echo  Si se reinicia, la direccion CAMBIA: vuelve a compartirla.
 echo ================================================================
-cloudflared tunnel --url http://127.0.0.1:%PORT%
+node tunel.mjs
 pause
 exit /b
 
