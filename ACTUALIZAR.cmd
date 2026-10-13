@@ -2,7 +2,13 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 title Actualizar portal electoral
-echo %~dp0| findstr /i /c:"\Temp\" /c:"\Rar$" /c:"\Downloads\" /c:"\Descargas\" >nul && (
+set "AQUI=%~dp0"
+set "MAL="
+if not "%AQUI:\Temp\=%"=="%AQUI%" set "MAL=1"
+if not "%AQUI:\Rar$=%"=="%AQUI%" set "MAL=1"
+if not "%AQUI:\Downloads\=%"=="%AQUI%" set "MAL=1"
+if not "%AQUI:\Descargas\=%"=="%AQUI%" set "MAL=1"
+if defined MAL (
   echo ESTE ARCHIVO SE ABRIO DESDE EL ZIP, DESCARGAS O UNA CARPETA TEMPORAL.
   echo Debe estar dentro de la carpeta del portal, por ejemplo C:\portal-electoral,
   echo junto a INICIAR-PUBLICO.cmd. No se hizo ningun cambio.
