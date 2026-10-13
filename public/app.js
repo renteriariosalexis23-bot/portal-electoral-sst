@@ -559,3 +559,9 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  }
  new MutationObserver(()=>{addToggle(document.getElementById('key'));addToggle(document.getElementById('esc-key'));}).observe(content,{childList:true,subtree:true});
 })();
+
+/* ===== Los avisos siempre se ven, aunque la página esté más abajo ===== */
+(()=>{
+ const baseNotice=notice;
+ notice=function(s=''){baseNotice(s);if(!s)return;const el=$('#notice'),r=el.getBoundingClientRect();if(r.top<90||r.bottom>innerHeight)el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});};
+})();
