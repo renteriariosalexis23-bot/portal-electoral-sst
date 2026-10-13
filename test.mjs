@@ -172,7 +172,7 @@ test('junta: clave por integrante, registro de ingresos y escrutinio con dos int
   assert.deepEqual(config.board.map(m=>m.role),['Presidente','Secretaria','Vocal 1','Vocal 2']);assert.equal(JSON.stringify(config.board).includes('key'),false);
   const pres={member:'presidente',key:'junta-demo'},sec={member:'secretaria',key:'JUNTA-DEMO'};
   assert.equal((await api('admin',{key:{member:'presidente',key:'OTRA'}})).status,401);
-  const report=await api('admin',{key:pres});assert.equal(report.status,200);assert.equal(report.data.member.role,'Presidente');assert.equal(report.data.elections[0].results,null);
+  const report=await api('admin',{key:pres});assert.equal(report.status,200);assert.equal(report.data.member.role,'Presidente');assert.equal(report.data.elections[0].results,null);assert.equal(report.data.escrutinio,null);
   const token=(await api('login',{dni:'12345678',code:'DEMO-2026',reviewed:['sst','hs']})).data.token;
   assert.equal((await api('vote',{election:'sst',selection:['s2']},token)).status,200);
   assert.equal((await api('escrutinio',{key:pres,second:pres})).status,400);
@@ -181,6 +181,7 @@ test('junta: clave por integrante, registro de ingresos y escrutinio con dos int
   const sst=esc.data.elections.find(e=>e.id==='sst');assert.equal(sst.results.total,1);assert.equal(sst.results.candidates.find(c=>c.id==='s2').votes,1);
   assert.deepEqual(esc.data.openedBy.map(m=>m.role),['Presidente','Secretaria']);
   const events=(await api('admin',{key:sec})).data.events.map(e=>e.event).join('\n');
+  {const later=(await api('admin',{key:{member:'vocal1',key:'JUNTA-DEMO'}})).data.escrutinio;assert.equal(later.elections.find(e=>e.id==='sst').results.total,1);assert.deepEqual(later.openedBy.map(m=>m.role),['Presidente','Secretaria']);}
   const firma=[Array.from({length:12},(_,i)=>[0.1+i*0.06,i%2?0.3:0.6])];
   assert.equal(esc.data.signatures.length,4);assert.ok(esc.data.signatures.every(m=>!m.signedAt));
   assert.equal((await api('junta-firmar',{key:{member:'vocal1',key:'MAL'},strokes:firma,accepted:true})).status,401);

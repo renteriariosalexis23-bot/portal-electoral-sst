@@ -471,9 +471,9 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
    (canOpen?'<form id="esc-form" class="esc-form"><label for="esc-member">Segundo integrante</label><select id="esc-member" required><option value="">Elige al segundo integrante</option>'+others.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.role)+' · '+esc(m.name)+'</option>').join('')+'</select><label for="esc-key">Su clave personal</label><input id="esc-key" type="password" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX"><div class="actions"><button class="primary">Abrir escrutinio</button></div></form>':'<p class="esc-wait">Disponible desde el '+esc(fmt(cfg.closes))+' (hora de Perú).</p>')+
    '<div id="esc-results"></div>';
   /* Si el escrutinio ya se abrió, cada integrante puede firmar desde su propio equipo sin volver a abrirlo. */
-  if(report.escOpened&&report.signatures&&report.signatures.length){box.insertAdjacentHTML('beforeend','<section id="junta-sign" class="junta-sign"></section>');renderJuntaSign({signatures:report.signatures});}
   const form=$('#esc-form');
-  if(form)form.onsubmit=async ev=>{ev.preventDefault();try{const data=await api('escrutinio',{key,second:{member:$('#esc-member').value,key:$('#esc-key').value.trim()}});form.remove();showResults(data);}catch(err){notice(err.message);}};
+  if(report.escrutinio){if(form)form.remove();showResults(report.escrutinio);}
+  else if(form)form.onsubmit=async ev=>{ev.preventDefault();try{const data=await api('escrutinio',{key,second:{member:$('#esc-member').value,key:$('#esc-key').value.trim()}});form.remove();showResults(data);}catch(err){notice(err.message);}};
   const events=(report.events||[]).slice(-40).reverse();
   content.insertAdjacentHTML('beforeend','<details class="activity"><summary>Registro de actividad <span>'+events.length+'</span></summary><ul>'+events.map(e=>'<li><time>'+esc(fmt(e.time))+'</time><span>'+esc(eventLabel(e.event))+'</span></li>').join('')+'</ul></details>');
  };
