@@ -645,3 +645,4 @@ body.voting-mode nav{display:none!important}
 .closed-box span,.demo-close span{display:block;font-size:13px;color:#5d4e60;margin-top:3px}
 .demo-close>div{flex:1 1 280px}
 .demo-close{border-style:dashed;border-color:#b89445;background:#fdf8ec}
+.esc-docs{margin:14px 0 18px;gap:10px}
