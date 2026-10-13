@@ -20,6 +20,9 @@ const saved=db.prepare('SELECT value FROM config WHERE id=1').get();
 if(saved&&saved.value!==JSON.stringify(cfg))throw Error('La configuración no coincide.');
 const exists=db.prepare('SELECT 1 FROM voters WHERE employee=?');
 const fresh=rows.filter(r=>!exists.get(r.employee)),skipped=rows.length-fresh.length;
+const named=db.prepare("UPDATE voters SET name=? WHERE employee=? AND name<>?");let renamed=0;
+for(const r of rows)if(r.name&&exists.get(r.employee))renamed+=Number(named.run(r.name,r.employee,r.name).changes);
+if(renamed)console.log('Nombres actualizados en el panel de la junta: '+renamed+'.');
 if(!fresh.length){console.log('No hay trabajadores nuevos: los '+skipped+' del Excel ya tienen código.');process.exit(0);}
 const out=fresh.map(r=>({...r,code:newCode()}));
 const stamp=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
@@ -29,8 +32,8 @@ const jsonFile=new URL(pre+'credenciales-'+stamp+'.json',dir),htmlFile=new URL(p
 db.exec('BEGIN IMMEDIATE');
 try{
  db.prepare('INSERT OR IGNORE INTO config VALUES(1,?)').run(JSON.stringify(cfg));
- const ins=db.prepare('INSERT INTO voters VALUES(?,?,?)');
- for(const r of out)ins.run(hash(credential(r.employee,r.code)),r.employee,JSON.stringify(r.eligible));
+ const ins=db.prepare('INSERT INTO voters(code_hash,employee,eligible,name) VALUES(?,?,?,?)');
+ for(const r of out)ins.run(hash(credential(r.employee,r.code)),r.employee,JSON.stringify(r.eligible),r.name||'');
  writeFileSync(jsonFile,JSON.stringify(out.map(({employee,name,eligible,code})=>({dni:employee,name,eligible,code})),null,2),{flag:'wx',mode:0o600});
  writeFileSync(htmlFile,cardsHtml(cfg,out,fileURLToPath(new URL('./public/logo.png',import.meta.url))),{flag:'wx',mode:0o600});
  db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run((demo?'PADRON_IMPORT_PRUEBA ':'PADRON_IMPORT ')+out.length,new Date().toISOString());

@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {openDB,hash,vote,signParticipation} from './core.mjs';
-import {credential,normalizeDni,boardKey} from './padron.mjs';
+import {credential,normalizeDni,boardKey,loadPadron} from './padron.mjs';
 const root=dirname(fileURLToPath(import.meta.url)),cfg=JSON.parse(readFileSync(join(root,'config.json')));
 const demo=cfg.mode==='demo';
 if(!demo&&!cfg.approved)throw Error('Se requiere configuración aprobada (approved: true).');
@@ -26,7 +26,9 @@ function member(k){
  return m&&equal(hash(boardKey(m.id,k.key)),m.key_hash)?m:null;
 }
 function results(e){const rows=db.prepare('SELECT selection FROM ballots WHERE election=?').all(e.id).map(b=>JSON.parse(b.selection));return {total:rows.length,blank:rows.filter(r=>!r.length).length,candidates:e.candidates.map(c=>({id:c.id,number:c.number,name:c.name,votes:rows.filter(r=>r.includes(c.id)).length}))};}
-if(demo){db.prepare('INSERT OR IGNORE INTO voters VALUES(?,?,?)').run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nJunta de prueba: elige cualquier integrante · clave JUNTA-DEMO');}
+if(demo){db.prepare("INSERT OR IGNORE INTO voters(code_hash,employee,eligible,name) VALUES(?,?,?,'Trabajador de prueba')").run(hash(credential('12345678','DEMO-2026')),'12345678','["sst","hs"]');console.log('Ingreso de prueba: DNI 12345678 · código DEMO-2026\nJunta de prueba: elige cualquier integrante · clave JUNTA-DEMO');}
+/* Completa los nombres del panel de la junta con padron.xlsx (no agrega ni quita trabajadores). */
+for(const f of ['padron.xlsx','padron.csv'])if(existsSync(join(root,f))){try{const set=db.prepare("UPDATE voters SET name=? WHERE employee=? AND name=''");let n=0;for(const r of loadPadron(join(root,f),cfg.elections).rows)if(r.name)n+=Number(set.run(r.name,r.employee).changes);if(n)console.log('Nombres cargados desde '+f+': '+n+'.');}catch(e){console.log('No se pudieron leer los nombres de '+f+': '+e.message);}break;}
 db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('SERVER_START',new Date().toISOString());
 const sessions=new Map(),attempts=new Map();
 /* Publicación con Cloudflare Tunnel: todo llega desde 127.0.0.1, así que la IP real viene en CF-Connecting-IP. */
@@ -84,7 +86,7 @@ const server=http.createServer(async(req,res)=>{
    if(path==='/api/admin-signatures'){db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('LISTA_FIRMAS_DESCARGADA '+who.role+' · '+who.name,new Date().toISOString());return send(200,{company:cfg.company,period:cfg.period,demo,generatedAt:new Date().toISOString(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,voted:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,signatures:db.prepare('SELECT payload,checksum FROM signatures WHERE election=?').all(e.id).map(r=>{const x=JSON.parse(r.payload);return{employee:x.employee,signerName:x.signerName,signedAt:x.signedAt,strokes:x.strokes,checksum:r.checksum};}).sort((a,b)=>a.signedAt.localeCompare(b.signedAt))}))});}
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
    const closed=Date.now()>=Date.parse(cfg.closes);
-   const voters=db.prepare('SELECT code_hash,employee,eligible FROM voters ORDER BY employee').all().map(v=>({employee:v.employee,signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(v.code_hash).map(s=>s.election),eligible:JSON.parse(v.eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(v.code_hash).map(p=>p.election)}));
+   const voters=db.prepare('SELECT code_hash,employee,eligible,name FROM voters ORDER BY employee').all().map(v=>({employee:v.employee,name:v.name||'',signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(v.code_hash).map(s=>s.election),eligible:JSON.parse(v.eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(v.code_hash).map(p=>p.election)}));
    return send(200,{demo,closed,member:{name:who.name,role:who.role},voters,elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:null})),events:db.prepare('SELECT event,time FROM audit ORDER BY id').all()});
   }
   const token=(req.headers.authorization||'').replace(/^Bearer /,''),session=sessions.get(token);

@@ -1,10 +1,15 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {openDB,hash,vote} from './core.mjs';
+import {DatabaseSync} from 'node:sqlite';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {rmSync} from 'node:fs';
 const cfg={opens:'2026-11-02T09:00:00-05:00',closes:'2026-11-02T16:00:00-05:00',elections:[{id:'sst',total:1,groups:{},candidates:[{id:'a',group:''}]},{id:'hs',total:2,groups:{Mujer:1,Hombre:1},candidates:[{id:'m',group:'Mujer'},{id:'m2',group:'Mujer'},{id:'h',group:'Hombre'}]}]};
 const now=Date.parse('2026-11-02T15:00:00Z');
-function setup(eligible=['sst','hs']){const db=openDB(':memory:');db.prepare('INSERT INTO voters VALUES(?,?,?)').run(hash('secret'),'worker',JSON.stringify(eligible));return db;}
+function setup(eligible=['sst','hs']){const db=openDB(':memory:');db.prepare('INSERT INTO voters(code_hash,employee,eligible) VALUES(?,?,?)').run(hash('secret'),'worker',JSON.stringify(eligible));return db;}
 test('solo un voto por comité, independiente de la otra elección',()=>{const db=setup();vote(db,cfg,'secret','sst',['a'],now);assert.throws(()=>vote(db,cfg,'secret','sst',['a'],now),/Ya registraste/);vote(db,cfg,'secret','hs',['m','h'],now);assert.equal(db.prepare('SELECT COUNT(*) n FROM ballots').get().n,2);db.close();});
+test('agrega la columna de nombre a una base antigua sin perder trabajadores',()=>{const f=join(tmpdir(),'old-'+Date.now()+'.sqlite');const o=new DatabaseSync(f);o.exec('CREATE TABLE voters(code_hash TEXT PRIMARY KEY,employee TEXT UNIQUE NOT NULL,eligible TEXT NOT NULL)');o.prepare('INSERT INTO voters VALUES(?,?,?)').run('h','11111111','["sst"]');o.close();const db=openDB(f);assert.deepEqual({...db.prepare('SELECT employee,name FROM voters').get()},{employee:'11111111',name:''});db.close();rmSync(f);});
 test('rechaza fuera de horario y cierra exactamente a las 16:00',()=>{const db=setup();for(const time of [Date.parse(cfg.opens)-1,Date.parse(cfg.closes)])assert.throws(()=>vote(db,cfg,'secret','sst',[],time),/cerrada/);vote(db,cfg,'secret','sst',[],Date.parse(cfg.opens));db.close();});
 test('rechaza candidaturas ajenas, duplicadas y selección inválida sin registrar participación',()=>{const db=setup();for(const s of [['wrong'],['a','a'],['m','m2']])assert.throws(()=>vote(db,cfg,'secret',s[0]==='m'?'hs':'sst',s,now));assert.equal(db.prepare('SELECT COUNT(*) n FROM participation').get().n,0);db.close();});
 test('respeta elegibilidad por comité y credenciales',()=>{const db=setup(['sst']);assert.throws(()=>vote(db,cfg,'secret','hs',[],now),/habilitado/);assert.throws(()=>vote(db,cfg,'wrong','sst',[],now),/habilitado/);db.close();});
@@ -49,7 +54,7 @@ test('HTTP: autenticación, emisión, duplicado, panel protegido y cierre de ses
   assert.equal((await api('vote',{election:'hs',selection:['h2']},token)).status,400);
   assert.deepEqual((await api('status',{},token)).data.voted.sort(),['hs','sst']);
   assert.equal((await api('admin',{key:'wrong'})).status,401);
-  const report=(await api('admin',{key})).data;assert.equal(report.elections[0].participation,1);assert.deepEqual(report.voters[0].signed,['sst']);assert.deepEqual([...report.voters[0].voted].sort(),['hs','sst']);assert.equal(JSON.stringify(report.voters).includes('selection'),false);assert.equal(JSON.stringify(report.voters).includes('code_hash'),false);
+  const report=(await api('admin',{key})).data;assert.equal(report.elections[0].participation,1);assert.deepEqual(report.voters[0].signed,['sst']);assert.equal(report.voters[0].name,'Trabajador de prueba');assert.deepEqual([...report.voters[0].voted].sort(),['hs','sst']);assert.equal(JSON.stringify(report.voters).includes('selection'),false);assert.equal(JSON.stringify(report.voters).includes('code_hash'),false);
   assert.equal(report.elections[0].results,null);
 assert.equal((await api('admin-receipt',{key:'wrong',employee:'12345678',election:'sst'})).status,401);
 const receipt=(await api('admin-receipt',{key,employee:'12345678',election:'sst'})).data;assert.equal(receipt.id,signed.data.id);

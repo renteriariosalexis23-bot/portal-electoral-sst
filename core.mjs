@@ -11,6 +11,8 @@ export function openDB(path){
  CREATE TABLE IF NOT EXISTS ballots(id TEXT PRIMARY KEY,election TEXT NOT NULL,selection TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,event TEXT NOT NULL,time TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS board(id TEXT PRIMARY KEY,name TEXT NOT NULL,role TEXT NOT NULL,key_hash TEXT NOT NULL);`);
+ /* Nombre del trabajador (del Excel del padrón), solo para el panel de la junta. */
+ if(!db.prepare('PRAGMA table_info(voters)').all().some(c=>c.name==='name'))db.exec("ALTER TABLE voters ADD COLUMN name TEXT NOT NULL DEFAULT ''");
  return db;
 }
 export function vote(db,config,code,election,selection,now=Date.now()){

@@ -59,7 +59,7 @@ const yes=v=>/^(s[ií]|x|1|true|verdadero)$/i.test(String(v).trim());
 const no=v=>/^(no|0|false|falso|)$/i.test(String(v).trim());
 export function parsePadron(table,elections){
  const errors=[],head=(table[0]||[]).map(h=>String(h).trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,''));
- const iDni=head.indexOf('DNI'),iName=head.findIndex(h=>h==='NOMBRE'||h==='NOMBRES'||h==='APELLIDOS Y NOMBRES');
+ const iDni=head.indexOf('DNI'),iName=head.findIndex(h=>/NOMBRE|APELLIDO/.test(h));
  const cols=elections.map(e=>({id:e.id,i:head.indexOf(e.id.toUpperCase())}));
  if(iDni<0)errors.push('Falta la columna DNI en la primera fila.');
  for(const c of cols)if(c.i<0)errors.push('Falta la columna '+c.id.toUpperCase()+' en la primera fila.');
