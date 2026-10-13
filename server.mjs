@@ -68,7 +68,7 @@ const server=http.createServer(async(req,res)=>{
    if(!Array.isArray(body.reviewed)||!['sst','hs'].every(id=>body.reviewed.includes(id)))return send(403,{error:'Primero confirma la lectura de ambos comités.'});
    const token=randomBytes(32).toString('hex');sessions.set(token,{code:key,expires:Date.now()+1800000});return send(200,{token});
   }
-  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/escrutinio'){
+  if(path==='/api/admin'||path==='/api/admin-receipt'||path==='/api/admin-signatures'||path==='/api/escrutinio'){
    const ak='admin:'+clientIp(req);guard(ak);
    const who=member(body.key);
    if(!who){fail(ak);return send(401,{error:demo?'Clave incorrecta. En modo prueba la clave de la junta es JUNTA-DEMO (no es el código de los trabajadores).':'Clave incorrecta para ese integrante. Revisa la tarjeta de tu clave personal.'});}
@@ -81,6 +81,7 @@ const server=http.createServer(async(req,res)=>{
     db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('ESCRUTINIO_ABIERTO '+who.role+' + '+second.role,new Date().toISOString());
     return send(200,{demo,openedBy:[who,second].map(m=>({name:m.name,role:m.role})),openedAt:new Date().toISOString(),board:boardList(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,eligible:db.prepare('SELECT eligible FROM voters').all().filter(v=>JSON.parse(v.eligible).includes(e.id)).length,participation:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,results:results(e)}))});
    }
+   if(path==='/api/admin-signatures'){db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('LISTA_FIRMAS_DESCARGADA '+who.role+' · '+who.name,new Date().toISOString());return send(200,{company:cfg.company,period:cfg.period,demo,generatedAt:new Date().toISOString(),elections:cfg.elections.map(e=>({id:e.id,title:e.title,voted:db.prepare('SELECT COUNT(*) n FROM participation WHERE election=?').get(e.id).n,signatures:db.prepare('SELECT payload,checksum FROM signatures WHERE election=?').all(e.id).map(r=>{const x=JSON.parse(r.payload);return{employee:x.employee,signerName:x.signerName,signedAt:x.signedAt,strokes:x.strokes,checksum:r.checksum};}).sort((a,b)=>a.signedAt.localeCompare(b.signedAt))}))});}
    if(path==='/api/admin-receipt'){const v=db.prepare('SELECT code_hash FROM voters WHERE employee=?').get(body.employee);const row=v&&db.prepare('SELECT payload,checksum FROM signatures WHERE code_hash=? AND election=?').get(v.code_hash,body.election);if(!row)return send(404,{error:'Constancia no encontrada.'});return send(200,{...JSON.parse(row.payload),checksum:row.checksum});}
    const closed=Date.now()>=Date.parse(cfg.closes);
    const voters=db.prepare('SELECT code_hash,employee,eligible FROM voters ORDER BY employee').all().map(v=>({employee:v.employee,signed:db.prepare('SELECT election FROM signatures WHERE code_hash=?').all(v.code_hash).map(s=>s.election),eligible:JSON.parse(v.eligible),voted:db.prepare('SELECT election FROM participation WHERE code_hash=?').all(v.code_hash).map(p=>p.election)}));

@@ -53,6 +53,8 @@ test('HTTP: autenticación, emisión, duplicado, panel protegido y cierre de ses
   assert.equal(report.elections[0].results,null);
 assert.equal((await api('admin-receipt',{key:'wrong',employee:'12345678',election:'sst'})).status,401);
 const receipt=(await api('admin-receipt',{key,employee:'12345678',election:'sst'})).data;assert.equal(receipt.id,signed.data.id);
+assert.equal((await api('admin-signatures',{key:'wrong'})).status,401);
+const all=(await api('admin-signatures',{key})).data;assert.equal(all.elections.find(e=>e.id==='sst').signatures[0].employee,'12345678');assert.ok(all.elections.find(e=>e.id==='sst').signatures[0].strokes.length);assert.ok(!JSON.stringify(all).includes('selection'));
 assert.equal((await api('receipt',{election:'sst'},token)).data.id,receipt.id);
 await api('logout',{},token);assert.equal((await api('status',{},token)).status,401);
  }finally{

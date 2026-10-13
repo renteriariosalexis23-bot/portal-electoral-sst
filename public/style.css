@@ -637,3 +637,5 @@ body.voting-mode nav{display:none!important}
 #signer-name{width:100%;border:1px solid #d8ccd5;border-radius:4px;padding:14px;font:16px var(--sans);background:#fdfbfc}
 #signer-name.is-ok{border-color:#2f9e6b;box-shadow:0 0 0 3px #2f9e6b22}
 .name-hint{margin:6px 0 0!important;font-size:12.5px!important;color:#9b2c2c!important}.name-hint.ok{color:#1e7a4d!important}
+.signature-all{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 18px;padding:14px 16px;border:1px solid #e7d3e4;border-radius:12px;background:#fbf5fa}
+.signature-all span{flex:1 1 260px;font-size:.9rem;color:#5d4e60}
