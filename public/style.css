@@ -612,3 +612,12 @@ body,button,input,select{font-family:var(--sans)}
 .flow-node{overflow:visible!important}
 .flow-nodes{padding-top:16px;padding-bottom:6px}
 .flow-line{margin-top:3px}
+
+/* Modo votación */
+body.voting-mode main>:not(#acceso),body.voting-mode footer,body.voting-mode nav>a{display:none!important}
+body.voting-mode #acceso{display:block;max-width:960px;margin:0 auto;padding:40px 24px 60px}
+body.voting-mode #acceso .access-info{display:none}
+body.voting-mode #acceso .access-panel{width:100%}
+body.voting-mode .scroll-progress{display:none}
+@media(max-width:600px){body.voting-mode #acceso{padding:20px 12px 40px}}
+body.voting-mode nav{display:none!important}

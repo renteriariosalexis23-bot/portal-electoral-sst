@@ -535,3 +535,15 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  }
  new MutationObserver(enhance).observe(panel,{childList:true});enhance();
 })();
+
+/* ===== Modo votación: al ingresar solo se ve la votación ===== */
+(()=>{
+ let was=false;
+ const sync=()=>{
+  const on=!!token||!!content.querySelector('.admin-heading');
+  document.body.classList.toggle('voting-mode',on);
+  if(on&&!was)scrollTo({top:0,behavior:'auto'});
+  was=on;
+ };
+ new MutationObserver(sync).observe(content,{childList:true});sync();
+})();
