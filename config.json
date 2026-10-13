@@ -38,8 +38,8 @@
         },
         {
           "name": "Ana Rodriguez Capcha",
-          "role": "Contadora",
-          "site": "Contabilidad · Sede Central",
+          "role": "Tesorería",
+          "site": "Tesorería · Sede Central",
           "id": "s4",
           "number": 4,
           "group": ""
@@ -50,6 +50,14 @@
           "site": "SISOL Villa María del Triunfo",
           "id": "s5",
           "number": 5,
+          "group": ""
+        },
+        {
+          "name": "Yovanna Vanessa Herrera Baltodano",
+          "role": "Técnica en farmacia",
+          "site": "Botica Dermatológica SISOL Surquillo",
+          "id": "s6",
+          "number": 6,
           "group": ""
         }
       ]
@@ -86,8 +94,8 @@
         },
         {
           "name": "Ana Rodriguez Capcha",
-          "role": "Contadora",
-          "site": "Contabilidad · Sede Central",
+          "role": "Tesorería",
+          "site": "Tesorería · Sede Central",
           "id": "h4",
           "number": 4,
           "group": ""
@@ -98,6 +106,14 @@
           "site": "SISOL Villa María del Triunfo",
           "id": "h5",
           "number": 5,
+          "group": ""
+        },
+        {
+          "name": "Yovanna Vanessa Herrera Baltodano",
+          "role": "Técnica en farmacia",
+          "site": "Botica Dermatológica SISOL Surquillo",
+          "id": "h6",
+          "number": 6,
           "group": ""
         }
       ],

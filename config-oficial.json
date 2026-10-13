@@ -1,0 +1,122 @@
+{
+  "company": "IMAGE & HEALTH S.A.C.",
+  "period": "2026–2028",
+  "mode": "real",
+  "approved": true,
+  "opens": "2026-11-02T09:00:00-05:00",
+  "closes": "2026-11-02T16:00:00-05:00",
+  "elections": [
+    {
+      "id": "sst",
+      "title": "Seguridad y Salud en el Trabajo",
+      "total": 1,
+      "groups": {},
+      "candidates": [
+        {
+          "name": "Madeline Alcantara Paucarpura",
+          "role": "Técnica en farmacia",
+          "site": "Laboratorio Magistral · Sede Central",
+          "id": "s1",
+          "number": 1,
+          "group": ""
+        },
+        {
+          "name": "Rosmeri Cano Pajuelo",
+          "role": "Técnica en farmacia",
+          "site": "Botica Dermatológica SISOL Camaná",
+          "id": "s2",
+          "number": 2,
+          "group": ""
+        },
+        {
+          "name": "Irma Magaly Flores Leon",
+          "role": "Químico Farmacéutico",
+          "site": "Botica Dermatológica SISOL San Juan de Lurigancho",
+          "id": "s3",
+          "number": 3,
+          "group": ""
+        },
+        {
+          "name": "Ana Rodriguez Capcha",
+          "role": "Tesorería",
+          "site": "Tesorería · Sede Central",
+          "id": "s4",
+          "number": 4,
+          "group": ""
+        },
+        {
+          "name": "Elizabeth Genesis Sanchez Perez",
+          "role": "Técnica en farmacia",
+          "site": "SISOL Villa María del Triunfo",
+          "id": "s5",
+          "number": 5,
+          "group": ""
+        },
+        {
+          "name": "Yovanna Vanessa Herrera Baltodano",
+          "role": "Técnica en farmacia",
+          "site": "Botica Dermatológica SISOL Surquillo",
+          "id": "s6",
+          "number": 6,
+          "group": ""
+        }
+      ]
+    },
+    {
+      "id": "hs",
+      "title": "Intervención frente al Hostigamiento Sexual",
+      "total": 1,
+      "groups": {},
+      "candidates": [
+        {
+          "name": "Madeline Alcantara Paucarpura",
+          "role": "Técnica en farmacia",
+          "site": "Laboratorio Magistral · Sede Central",
+          "id": "h1",
+          "number": 1,
+          "group": ""
+        },
+        {
+          "name": "Rosmeri Cano Pajuelo",
+          "role": "Técnica en farmacia",
+          "site": "Botica Dermatológica SISOL Camaná",
+          "id": "h2",
+          "number": 2,
+          "group": ""
+        },
+        {
+          "name": "Irma Magaly Flores Leon",
+          "role": "Químico Farmacéutico",
+          "site": "Botica Dermatológica SISOL San Juan de Lurigancho",
+          "id": "h3",
+          "number": 3,
+          "group": ""
+        },
+        {
+          "name": "Ana Rodriguez Capcha",
+          "role": "Tesorería",
+          "site": "Tesorería · Sede Central",
+          "id": "h4",
+          "number": 4,
+          "group": ""
+        },
+        {
+          "name": "Elizabeth Genesis Sanchez Perez",
+          "role": "Técnica en farmacia",
+          "site": "SISOL Villa María del Triunfo",
+          "id": "h5",
+          "number": 5,
+          "group": ""
+        },
+        {
+          "name": "Yovanna Vanessa Herrera Baltodano",
+          "role": "Técnica en farmacia",
+          "site": "Botica Dermatológica SISOL Surquillo",
+          "id": "h6",
+          "number": 6,
+          "group": ""
+        }
+      ]
+    }
+  ]
+}
