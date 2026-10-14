@@ -865,3 +865,28 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
   });
  },200);
 })();
+
+/* ===== Ficha de cada integrante de la junta (clic en "Nuestra junta electoral") ===== */
+(()=>{
+ const roleText=r=>{const x=String(r||'').toLowerCase();
+  if(x.startsWith('presid'))return 'Dirige el proceso electoral: verifica la apertura de la votación, abre el escrutinio junto a otro integrante y preside la firma de las actas.';
+  if(x.startsWith('secret'))return 'Registra y resguarda la documentación del proceso: padrón, constancias de participación y actas de la elección.';
+  return 'Apoya la organización y supervisión del proceso electoral, vigila la participación y firma las actas en señal de conformidad.';};
+ const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+ function open(m){
+  const list=(cfg&&cfg.board)||[],role=norm((m.querySelector('.board-role')||{}).textContent);
+  const b=list.find(x=>norm(x.role)===role);if(!b)return;
+  const photo=(cfg.boardPhotos||[]).includes(b.id);
+  const ov=document.createElement('div');ov.className='cf-overlay';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','Ficha de '+b.name);
+  ov.innerHTML='<div class="cf-card"><button class="cf-close" aria-label="Cerrar">×</button><div class="cf-photo"><span>'+esc(b.name.split(/\s+/).map(w=>w[0]).slice(0,2).join(''))+'</span></div><div class="cf-body"><small>JUNTA ELECTORAL · '+esc(cfg.period||'')+'</small><h3>'+esc(b.name)+'</h3><p class="cf-meta"><b>'+esc(b.role)+'</b></p><p class="cf-meta">'+esc(roleText(b.role))+'</p><p class="cf-com">Organiza: <span>Seguridad y Salud en el Trabajo</span><span>Intervención frente al Hostigamiento Sexual</span></p></div></div>';
+  if(photo){const img=new Image();img.alt=b.name;img.src=(typeof IMG!=='undefined'&&IMG['junta'+b.id])||('/junta/'+b.id+'.jpg');ov.querySelector('.cf-photo').prepend(img);}
+  const last=document.activeElement,key=e=>{if(e.key==='Escape')close();};
+  const close=()=>{ov.classList.add('out');setTimeout(()=>ov.remove(),220);document.removeEventListener('keydown',key);last&&last.focus&&last.focus();};
+  ov.onclick=e=>{if(e.target===ov||e.target.closest('.cf-close'))close();};document.addEventListener('keydown',key);
+  document.body.append(ov);ov.querySelector('.cf-close').focus();
+ }
+ document.addEventListener('click',e=>{const m=e.target.closest('.board-member');if(m)open(m);});
+ document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('board-member')){e.preventDefault();open(e.target);}});
+ const mark=()=>document.querySelectorAll('.board-member:not([data-cf])').forEach(m=>{m.dataset.cf='1';m.tabIndex=0;m.setAttribute('role','button');m.setAttribute('aria-label','Ver ficha de '+((m.querySelector('h3')||{}).textContent||'integrante'));m.insertAdjacentHTML('beforeend','<span class="cf-more">Ver perfil →</span>');});
+ mark();setTimeout(mark,1000);
+})();
