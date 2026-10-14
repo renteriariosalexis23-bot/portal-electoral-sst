@@ -801,3 +801,30 @@ body:not(.voting-mode) #acceso:not(.voting-focus){background:#fff!important;box-
 #acceso .access-panel{box-shadow:0 18px 50px -20px rgba(134,16,121,.28)}
 .electoral-board{background:linear-gradient(180deg,#efdcec 0%,#f5e8f2 100%)!important;position:relative}
 .electoral-board:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:96px;height:5px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#861079,#b0489f)}
+/* Panel de la junta: encabezado morado con foto */
+.admin-heading.jh{position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto;grid-template-areas:"main actions" "team team";gap:22px 24px;align-items:center;margin:-8px 0 26px;padding:30px 32px 24px;border-radius:20px;color:#fff;background:radial-gradient(120% 140% at 100% 0%,#b0489f 0%,rgba(176,72,159,0) 55%),linear-gradient(120deg,#4a0b45 0%,#861079 60%,#9c2a8e 100%);box-shadow:0 22px 50px -24px rgba(74,11,69,.7)}
+.admin-heading.jh:after{content:"";position:absolute;right:-60px;bottom:-90px;width:260px;height:260px;border-radius:50%;border:38px solid rgba(255,255,255,.06);pointer-events:none}
+.jh-main{grid-area:main;display:flex;align-items:center;gap:22px;min-width:0}
+.jh-photo{flex:none;width:96px;height:96px;border-radius:50%;padding:4px;background:linear-gradient(135deg,#fff,#f0d5ea);box-shadow:0 10px 26px -10px rgba(0,0,0,.5)}
+.jh-photo img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.jh-photo.jh-noimg,.jh-mini.jh-noimg{display:grid;place-items:center}
+.jh-photo.jh-noimg b{font-size:32px;color:#861079}
+.jh-text{min-width:0}
+.admin-heading.jh .eyebrow{color:#f3c9ea!important;margin:0 0 6px!important}
+.admin-heading.jh h2{color:#fff!important;margin:0 0 8px!important;font-size:clamp(24px,3vw,32px)}
+.jh-who{margin:0!important;color:#fff!important;font-size:15px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.jh-role{background:#fff;color:#861079;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.jh-upd{margin:8px 0 0!important;color:rgba(255,255,255,.75)!important;font-size:13px}
+.admin-heading.jh .actions{grid-area:actions;position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.admin-heading.jh .actions button{background:rgba(255,255,255,.12)!important;color:#fff!important;border:1px solid rgba(255,255,255,.45)!important;border-radius:10px;backdrop-filter:blur(4px)}
+.admin-heading.jh .actions button:hover{background:#fff!important;color:#861079!important}
+.jh-team{grid-area:team;position:relative;z-index:1;display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+.jh-team small{color:rgba(255,255,255,.8);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.jh-team>div{display:flex}
+.jh-mate{margin-left:-8px;opacity:.75;transition:transform .2s,opacity .2s}.jh-mate:first-child{margin-left:0}
+.jh-mate:hover,.jh-mate.is-me{opacity:1;transform:translateY(-3px)}
+.jh-mini{display:block;width:40px;height:40px;border-radius:50%;border:2px solid #fff;overflow:hidden;background:#f0d5ea}
+.jh-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.jh-mini.jh-noimg b{font-size:13px;color:#861079}
+.jh-mate.is-me .jh-mini{box-shadow:0 0 0 3px #f3c9ea}
+@media(max-width:700px){.admin-heading.jh{grid-template-columns:1fr;grid-template-areas:"main" "actions" "team";padding:24px 20px 20px;margin-top:0}.jh-main{flex-direction:column;align-items:flex-start;gap:14px}.jh-photo{width:80px;height:80px}.admin-heading.jh .actions{justify-content:flex-start}}

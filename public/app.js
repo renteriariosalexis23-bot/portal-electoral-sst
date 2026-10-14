@@ -890,3 +890,22 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  const mark=()=>document.querySelectorAll('.board-member:not([data-cf])').forEach(m=>{m.dataset.cf='1';m.tabIndex=0;m.setAttribute('role','button');m.setAttribute('aria-label','Ver ficha de '+((m.querySelector('h3')||{}).textContent||'integrante'));m.insertAdjacentHTML('beforeend','<span class="cf-more">Ver perfil →</span>');});
  mark();setTimeout(mark,1000);
 })();
+
+/* ===== Panel de la junta: encabezado con la foto y los colores de la empresa ===== */
+(()=>{
+ const pic=id=>(typeof IMG!=='undefined'&&IMG['junta'+id])||('/junta/'+id+'.jpg');
+ const ini=n=>String(n||'').split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+ const face=(b,cls)=>{const has=b&&(cfg.boardPhotos||[]).includes(b.id);return '<span class="'+cls+(has?'':' jh-noimg')+'">'+(has?'<img src="'+pic(b.id)+'" alt="">':'<b>'+esc(ini(b&&b.name))+'</b>')+'</span>';};
+ const base=renderAdmin;
+ renderAdmin=function(report,key){
+  base(report,key);
+  const head=document.querySelector('#content .admin-heading');if(!head||!report.member)return;
+  const list=cfg.board||[],me=list.find(b=>b.role===report.member.role&&b.name===report.member.name)||list.find(b=>b.role===report.member.role)||{name:report.member.name,role:report.member.role};
+  const hour=Number(new Date().toLocaleString('en-US',{timeZone:'America/Lima',hour:'numeric',hour12:false}));
+  const hi=hour<12?'Buenos días':hour<19?'Buenas tardes':'Buenas noches';
+  const upd=[...head.querySelectorAll('p')].find(p=>/Actualizado/.test(p.textContent));
+  head.classList.add('jh');
+  head.firstElementChild.outerHTML='<div class="jh-main">'+face(me,'jh-photo')+'<div class="jh-text"><div class="eyebrow">JUNTA ELECTORAL · 2026–2028</div><h2 tabindex="-1">'+hi+', '+esc(String(me.name).split(/\s+/)[0])+'</h2><p class="jh-who"><span class="jh-role">'+esc(me.role)+'</span>'+esc(me.name)+'</p>'+(upd?'<p class="jh-upd">'+esc(upd.textContent)+'</p>':'')+'</div></div>';
+  if(list.length)head.insertAdjacentHTML('beforeend','<div class="jh-team"><small>Integrantes de la junta</small><div>'+list.map(b=>'<span class="jh-mate'+(b===me?' is-me':'')+'" title="'+esc(b.role+' · '+b.name)+'">'+face(b,'jh-mini')+'</span>').join('')+'</div></div>');
+ };
+})();
