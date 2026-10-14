@@ -789,3 +789,7 @@ label.no-blank{display:none!important}
 .cands .cand-card{box-shadow:0 10px 26px #46133f10}
 .howto{padding-top:96px!important}
 @media(max-width:600px){.cands{padding-top:48px!important;padding-bottom:56px!important}.howto{padding-top:60px!important}}
+/* Separación más marcada: candidaturas en lila visible, "Cinco pasos" en blanco */
+.cands{background:linear-gradient(180deg,#efdcec 0%,#f5e8f2 100%)!important;box-shadow:0 0 0 100vmax #f2e2ef!important;border-bottom:0!important}
+.cands:after{height:5px;width:96px}
+.howto{background:#fff!important;box-shadow:0 0 0 100vmax #fff;clip-path:inset(0 -100vmax)}
