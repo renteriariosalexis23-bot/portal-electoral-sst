@@ -25,10 +25,9 @@ export function vote(db,config,code,election,selection,now=Date.now()){
  if(!e||!Array.isArray(selection)||selection.some(s=>typeof s!=='string')||new Set(selection).size!==selection.length)throw Error('Cédula inválida.');
  if(e.ready===false)throw Error(e.pendingReason||'Cédula pendiente de validación.');
  if(selection.some(id=>!e.candidates.some(c=>c.id===id)))throw Error('Candidatura inválida.');
- if(selection.length){
-  if(selection.length!==e.total)throw Error('Selecciona '+e.total+' candidaturas o vota en blanco.');
-  for(const [g,n] of Object.entries(e.groups))if(selection.filter(id=>e.candidates.find(c=>c.id===id).group===g).length!==n)throw Error('La selección no cumple la composición de esta cédula.');
- }
+ /* No hay voto en blanco: se debe elegir exactamente el número de candidaturas de la cédula. */
+ if(selection.length!==e.total)throw Error(e.total===1?'Elige una candidatura para votar.':'Selecciona '+e.total+' candidaturas para votar.');
+ for(const [g,n] of Object.entries(e.groups))if(selection.filter(id=>e.candidates.find(c=>c.id===id).group===g).length!==n)throw Error('La selección no cumple la composición de esta cédula.');
  db.exec('BEGIN IMMEDIATE');
  try{
   const h=hash(code),v=db.prepare('SELECT eligible FROM voters WHERE code_hash=?').get(h);

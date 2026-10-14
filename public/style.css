@@ -750,3 +750,4 @@ body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
 .dash-grid .dash-body .blurb{-webkit-line-clamp:2;font-size:12.5px!important;margin-bottom:12px!important}
 .dash-grid .dash-body .actions{width:100%}
 .dash-grid .dash-body .actions button{padding:12px 18px}
+label.no-blank{display:none!important}

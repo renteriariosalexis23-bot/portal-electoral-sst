@@ -10,9 +10,9 @@ const now=Date.parse('2026-11-02T15:00:00Z');
 function setup(eligible=['sst','hs']){const db=openDB(':memory:');db.prepare('INSERT INTO voters(code_hash,employee,eligible) VALUES(?,?,?)').run(hash('secret'),'worker',JSON.stringify(eligible));return db;}
 test('solo un voto por comité, independiente de la otra elección',()=>{const db=setup();vote(db,cfg,'secret','sst',['a'],now);assert.throws(()=>vote(db,cfg,'secret','sst',['a'],now),/Ya registraste/);vote(db,cfg,'secret','hs',['m','h'],now);assert.equal(db.prepare('SELECT COUNT(*) n FROM ballots').get().n,2);db.close();});
 test('agrega la columna de nombre a una base antigua sin perder trabajadores',()=>{const f=join(tmpdir(),'old-'+Date.now()+'.sqlite');const o=new DatabaseSync(f);o.exec('CREATE TABLE voters(code_hash TEXT PRIMARY KEY,employee TEXT UNIQUE NOT NULL,eligible TEXT NOT NULL)');o.prepare('INSERT INTO voters VALUES(?,?,?)').run('h','11111111','["sst"]');o.close();const db=openDB(f);assert.deepEqual({...db.prepare('SELECT employee,name FROM voters').get()},{employee:'11111111',name:''});db.close();rmSync(f);});
-test('rechaza fuera de horario y cierra exactamente a las 16:00',()=>{const db=setup();for(const time of [Date.parse(cfg.opens)-1,Date.parse(cfg.closes)])assert.throws(()=>vote(db,cfg,'secret','sst',[],time),/cerrada/);vote(db,cfg,'secret','sst',[],Date.parse(cfg.opens));db.close();});
+test('rechaza fuera de horario y cierra exactamente a las 16:00',()=>{const db=setup();for(const time of [Date.parse(cfg.opens)-1,Date.parse(cfg.closes)])assert.throws(()=>vote(db,cfg,'secret','sst',[],time),/cerrada/);vote(db,cfg,'secret','sst',['a'],Date.parse(cfg.opens));db.close();});
 test('rechaza candidaturas ajenas, duplicadas y selección inválida sin registrar participación',()=>{const db=setup();for(const s of [['wrong'],['a','a'],['m','m2']])assert.throws(()=>vote(db,cfg,'secret',s[0]==='m'?'hs':'sst',s,now));assert.equal(db.prepare('SELECT COUNT(*) n FROM participation').get().n,0);db.close();});
-test('respeta elegibilidad por comité y credenciales',()=>{const db=setup(['sst']);assert.throws(()=>vote(db,cfg,'secret','hs',[],now),/habilitado/);assert.throws(()=>vote(db,cfg,'wrong','sst',[],now),/habilitado/);db.close();});
+test('respeta elegibilidad por comité y credenciales',()=>{const db=setup(['sst']);assert.throws(()=>vote(db,cfg,'secret','hs',['m','h'],now),/habilitado/);assert.throws(()=>vote(db,cfg,'wrong','sst',['a'],now),/habilitado/);db.close();});
 test('revierte papeleta si falla el registro de participación',()=>{const db=setup();db.exec("CREATE TRIGGER fail BEFORE INSERT ON participation BEGIN SELECT RAISE(ABORT,'forced'); END");assert.throws(()=>vote(db,cfg,'secret','sst',['a'],now));assert.equal(db.prepare('SELECT COUNT(*) n FROM ballots').get().n,0);db.close();});
 test('papeletas sin campos de identidad, IP, correo ni hora',()=>{const db=setup();assert.deepEqual(db.prepare('PRAGMA table_info(ballots)').all().map(c=>c.name),['id','election','selection']);db.close();});
 
@@ -74,6 +74,7 @@ await api('logout',{},token);assert.equal((await api('status',{},token)).status,
  }
 });
 
+test('no hay voto en blanco: una cédula vacía se rechaza sin registrar participación',()=>{const db=setup();assert.throws(()=>vote(db,cfg,'secret','sst',[],now),/Elige una candidatura/);assert.throws(()=>vote(db,cfg,'secret','hs',['m'],now),/Selecciona 2/);assert.equal(db.prepare('SELECT COUNT(*) n FROM participation').get().n,0);db.close();});
 test('cédula pendiente rechaza incluso voto en blanco',()=>{const db=setup();const pending={...cfg,elections:cfg.elections.map(e=>({...e,ready:false}))};assert.throws(()=>vote(db,pending,'secret','sst',[],now),/pendiente/);assert.equal(db.prepare('SELECT COUNT(*) n FROM ballots').get().n,0);db.close();});
 test('padrón: lee Excel, valida DNI, columnas y duplicados',async()=>{
  const {writeXlsx,readXlsx,parsePadron,newCode,normalizeCode,credential,CODE_ALPHABET}=await import('./padron.mjs');
