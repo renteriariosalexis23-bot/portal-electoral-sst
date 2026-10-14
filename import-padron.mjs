@@ -1,6 +1,6 @@
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {openDB,hash} from './core.mjs';
+import {openDB,hash,dbName,filePrefix} from './core.mjs';
 import {loadPadron,newCode,credential} from './padron.mjs';
 import {cardsHtml} from './tarjetas.mjs';
 const cfg=JSON.parse(readFileSync(new URL('./config.json',import.meta.url)));
@@ -12,10 +12,10 @@ const summary=rows=>cfg.elections.map(e=>rows.filter(r=>r.eligible.includes(e.id
 if(check){console.log('Padrón correcto: '+rows.length+' trabajadores ('+summary(rows)+'). No se guardó nada.');process.exit(0);}
 const demo=cfg.mode==='demo';
 if(!demo&&!cfg.approved)throw Error('Primero aprueba la configuración (approved: true).');
-if(!demo&&Date.now()>=Date.parse(cfg.opens))throw Error('El padrón se cierra al inicio de la elección. Para un código perdido usa reemplazar-codigo.mjs.');
+if(!demo&&cfg.mode!=='simulacro'&&Date.now()>=Date.parse(cfg.opens))throw Error('El padrón se cierra al inicio de la elección. Para un código perdido usa reemplazar-codigo.mjs.');
 if(demo)console.log('MODO PRUEBA: los códigos se guardan en la base de demostración (demo-dni.sqlite), no en la oficial.');
 mkdirSync(new URL('./data/',import.meta.url),{recursive:true});
-const db=openDB(fileURLToPath(new URL(demo?'./data/demo-dni.sqlite':'./data/election.sqlite',import.meta.url)));
+const db=openDB(fileURLToPath(new URL('./data/'+dbName(cfg),import.meta.url)));
 const saved=db.prepare('SELECT value FROM config WHERE id=1').get();
 if(saved&&saved.value!==JSON.stringify(cfg))throw Error('La configuración no coincide.');
 const exists=db.prepare('SELECT 1 FROM voters WHERE employee=?');
@@ -27,7 +27,7 @@ if(!fresh.length){console.log('No hay trabajadores nuevos: los '+skipped+' del E
 const out=fresh.map(r=>({...r,code:newCode()}));
 const stamp=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 const dir=new URL('./credenciales/',import.meta.url);mkdirSync(dir,{recursive:true,mode:0o700});
-const pre=demo?'PRUEBA-':'';
+const pre=filePrefix(cfg);
 const jsonFile=new URL(pre+'credenciales-'+stamp+'.json',dir),htmlFile=new URL(pre+'tarjetas-'+stamp+'.html',dir);
 db.exec('BEGIN IMMEDIATE');
 try{

@@ -25,20 +25,20 @@ if(existsSync(official)){
 
 /* 1. Borrar lo de prueba (y la base oficial vacía si se repite). */
 const del=f=>{try{rmSync(f,{force:true});}catch(e){fail('No se pudo borrar '+f+'. Cierra la ventana "Portal electoral - NO CERRAR" y vuelve a intentar.');}};
-for(const base of ['demo-dni.sqlite','election.sqlite'])for(const ext of ['','-wal','-shm']){const f=p('data',base+ext);if(base==='election.sqlite'&&!repetir)continue;del(f);if(existsSync(f))fail('No se pudo borrar '+f+'. Cierra la ventana "Portal electoral - NO CERRAR" y vuelve a intentar.');}
+for(const base of ['demo-dni.sqlite','simulacro.sqlite','election.sqlite'])for(const ext of ['','-wal','-shm']){const f=p('data',base+ext);if(base==='election.sqlite'&&!repetir)continue;del(f);if(existsSync(f))fail('No se pudo borrar '+f+'. Cierra la ventana "Portal electoral - NO CERRAR" y vuelve a intentar.');}
 mkdirSync(p('data'),{recursive:true});
 for(const old of readdirSync(p('data')).filter(f=>/^demo-.*\.sqlite/.test(f)))del(p('data',old));
 if(existsSync(p('data','respaldos')))for(const f of readdirSync(p('data','respaldos')).filter(f=>f.startsWith('demo-')))del(p('data','respaldos',f));
 if(existsSync(p('credenciales'))){
  const viejos=readdirSync(p('credenciales')).filter(f=>/\.(html|json)$/.test(f));
- for(const f of viejos.filter(f=>f.startsWith('PRUEBA-')))del(p('credenciales',f));
- const anteriores=viejos.filter(f=>!f.startsWith('PRUEBA-')&&existsSync(p('credenciales',f)));
+ for(const f of viejos.filter(f=>f.startsWith('PRUEBA-')||f.startsWith('SIMULACRO-')))del(p('credenciales',f));
+ const anteriores=viejos.filter(f=>!f.startsWith('PRUEBA-')&&!f.startsWith('SIMULACRO-')&&existsSync(p('credenciales',f)));
  if(anteriores.length){const d=p('credenciales','anteriores-NO-VALIDAS');mkdirSync(d,{recursive:true});for(const f of anteriores)renameSync(p('credenciales',f),join(d,f));}
 }
 console.log('Datos de prueba borrados.');
 
 /* 2. Configuración oficial (se guarda una copia de la de prueba). */
-if(existsSync(p('config.json')))copyFileSync(p('config.json'),p('config-prueba.json'));
+if(existsSync(p('config.json'))&&JSON.parse(readFileSync(p('config.json'),'utf8')).mode==='demo')copyFileSync(p('config.json'),p('config-prueba.json'));
 copyFileSync(p('config-oficial.json'),p('config.json'));
 console.log('Configuración oficial activada: votación del '+new Date(oficial.opens).toLocaleString('es-PE',{timeZone:'America/Lima'})+' al '+new Date(oficial.closes).toLocaleTimeString('es-PE',{timeZone:'America/Lima'})+'.');
 

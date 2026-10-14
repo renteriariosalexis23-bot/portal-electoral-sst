@@ -1,6 +1,6 @@
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {openDB,hash} from './core.mjs';
+import {openDB,hash,dbName,filePrefix} from './core.mjs';
 import {normalizeDni,newCode,credential} from './padron.mjs';
 import {cardsHtml} from './tarjetas.mjs';
 /* Anula el código de un trabajador que aún no votó y genera uno nuevo. */
@@ -10,13 +10,13 @@ if(!/^\d{8}$/.test(dni))throw Error('Uso: node reemplazar-codigo.mjs DNI [nombre
 const demo=cfg.mode==='demo';
 if(!demo&&!cfg.approved)throw Error('Primero aprueba la configuración (approved: true).');
 if(!demo&&Date.now()>=Date.parse(cfg.closes))throw Error('La votación ya cerró.');
-const db=openDB(fileURLToPath(new URL(demo?'./data/demo-dni.sqlite':'./data/election.sqlite',import.meta.url)));
+const db=openDB(fileURLToPath(new URL('./data/'+dbName(cfg),import.meta.url)));
 const v=db.prepare('SELECT code_hash,eligible FROM voters WHERE employee=?').get(dni);
 if(!v)throw Error('El DNI '+dni+' no está en el padrón.');
 if(db.prepare('SELECT 1 FROM participation WHERE code_hash=?').get(v.code_hash))throw Error('El DNI '+dni+' ya votó en al menos un comité; su código no se puede reemplazar.');
 const code=newCode(),stamp=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
 const dir=new URL('./credenciales/',import.meta.url);mkdirSync(dir,{recursive:true,mode:0o700});
-const file=new URL((demo?'PRUEBA-':'')+'reemplazo-'+dni+'-'+stamp+'.html',dir);
+const file=new URL(filePrefix(cfg)+'reemplazo-'+dni+'-'+stamp+'.html',dir);
 db.exec('BEGIN IMMEDIATE');
 try{
  db.prepare('UPDATE voters SET code_hash=? WHERE employee=?').run(hash(credential(dni,code)),dni);

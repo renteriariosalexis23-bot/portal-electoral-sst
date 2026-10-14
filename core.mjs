@@ -1,5 +1,8 @@
 import {DatabaseSync} from 'node:sqlite';
 import {createHash,randomUUID} from 'node:crypto';
+/* Base de datos según el modo: prueba, simulacro (ensayo real con fecha propia) u oficial. */
+export const dbName=cfg=>cfg.mode==='demo'?'demo-dni.sqlite':cfg.mode==='simulacro'?'simulacro.sqlite':'election.sqlite';
+export const filePrefix=cfg=>cfg.mode==='demo'?'PRUEBA-':cfg.mode==='simulacro'?'SIMULACRO-':'';
 export const hash=s=>createHash('sha256').update(s).digest('hex');
 export function openDB(path){
  const db=new DatabaseSync(path);
