@@ -173,6 +173,7 @@ test('junta: clave por integrante, registro de ingresos y escrutinio con dos int
   assert.deepEqual(config.board.map(m=>m.role),['Presidente','Secretaria','Vocal 1','Vocal 2']);
   assert.ok(Array.isArray(config.photos));for(const n of config.photos){const r=await fetch('http://127.0.0.1:18791/candidatas/'+n+'.jpg');assert.equal(r.status,200);assert.equal(r.headers.get('content-type'),'image/jpeg');}
   assert.notEqual((await fetch('http://127.0.0.1:18791/candidatas/..%2Fconfig.json')).status,200);
+  assert.ok(Array.isArray(config.boardPhotos));for(const id of config.boardPhotos)assert.equal((await fetch('http://127.0.0.1:18791/junta/'+id+'.jpg')).status,200);
   {const r=await fetch('http://127.0.0.1:18791/candidatas/perfiles.json');assert.equal(r.status,200);assert.equal(typeof await r.json(),'object');}assert.equal(JSON.stringify(config.board).includes('key'),false);
   const pres={member:'presidente',key:'junta-demo'},sec={member:'secretaria',key:'JUNTA-DEMO'};
   assert.equal((await api('admin',{key:{member:'presidente',key:'OTRA'}})).status,401);

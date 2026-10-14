@@ -849,3 +849,19 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('cand-card')){e.preventDefault();const n=numOf(e.target);if(n)open(n);}});
  new MutationObserver(()=>document.querySelectorAll('.cand-card:not([data-cf])').forEach(c=>{c.dataset.cf='1';if(c.getAttribute('aria-hidden')!=='true'){c.tabIndex=0;c.setAttribute('role','button');c.setAttribute('aria-label','Ver ficha de '+((c.querySelector('strong')||{}).textContent||'candidatura'));}if(!c.querySelector('.cf-more'))c.insertAdjacentHTML('beforeend','<span class="cf-more">Ver perfil →</span>');})).observe(document.body,{childList:true,subtree:true});
 })();
+
+/* ===== Fotos de la junta electoral (public/junta/<id>.jpg) ===== */
+(()=>{
+ const url=id=>'/junta/'+id+'.jpg';
+ const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+ const wait=setInterval(()=>{
+  if(typeof cfg==='undefined'||!cfg)return;clearInterval(wait);
+  const list=cfg.board||[],have=cfg.boardPhotos||[];if(!have.length)return;
+  document.querySelectorAll('.board-member').forEach(m=>{
+   const role=norm((m.querySelector('.board-role')||{}).textContent),name=norm((m.querySelector('h3')||{}).textContent);
+   const b=list.find(x=>norm(x.role)===role)||list.find(x=>name&&norm(x.name)===name);
+   const av=m.querySelector('.avatar');if(!b||!av||!have.includes(b.id))return;
+   av.classList.add('has-photo');av.style.setProperty('background-image','url("'+url(b.id)+'")','important');av.textContent='';
+  });
+ },200);
+})();

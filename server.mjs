@@ -17,6 +17,7 @@ const admin=process.env.ADMIN_KEY||randomBytes(32).toString('hex');
 /* Junta: una clave por integrante (claves-junta.mjs). En demo se crean con la clave JUNTA-DEMO. */
 if(demo&&!db.prepare('SELECT COUNT(*) n FROM board').get().n&&existsSync(join(root,'junta.json'))){const ins=db.prepare('INSERT INTO board VALUES(?,?,?,?)');for(const m of JSON.parse(readFileSync(join(root,'junta.json'))))ins.run(m.id,m.name,m.role,hash(boardKey(m.id,'JUNTA-DEMO')));}
 if(!demo&&db.prepare('SELECT COUNT(*) n FROM board').get().n<2)throw Error('Genera las claves de la junta con: node claves-junta.mjs');
+const boardPhotos=()=>{try{return readdirSync(join(root,'public','junta')).filter(f=>/^[a-z0-9]{1,20}\.jpg$/.test(f)).map(f=>f.slice(0,-4));}catch{return [];}};
 const candidatePhotos=()=>{try{return readdirSync(join(root,'public','candidatas')).filter(f=>/^\d{2}\.jpg$/.test(f)).map(f=>f.slice(0,2));}catch{return [];}};
 const boardList=()=>db.prepare('SELECT id,name,role FROM board ORDER BY rowid').all();
 /* Firmas de cierre: cada integrante de la junta firma después del escrutinio; las actas se descargan con todas. */
@@ -62,10 +63,12 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&['/','/app.js','/style.css'].includes(path)){res.writeHead(200,{'Content-Type':path==='/'?'text/html; charset=utf-8':path.endsWith('.js')?'text/javascript; charset=utf-8':'text/css; charset=utf-8'});return res.end(readFileSync(join(root,'public',path==='/'?'index.html':path.slice(1))));}
   const assets={'/portada-corregida.png':'image/png','/portada-image-health.jpg':'image/jpeg','/logo.png':'image/png','/equipo.jpg':'image/jpeg','/salud.jpg':'image/jpeg','/sst.jpg':'image/jpeg','/hs.jpg':'image/jpeg','/membrete.jpg':'image/jpeg','/fonts/jakarta.woff2':'font/woff2','/fonts/fraunces.woff2':'font/woff2','/fonts/fraunces-italic.woff2':'font/woff2'};
   /* Fotos de candidaturas: public/candidatas/NN.jpg (NN = número de candidatura). */
+  /* Fotos de la junta: public/junta/<id>.jpg (id de junta.json). */
+  if(req.method==='GET'&&/^\/junta\/[a-z0-9]{1,20}\.jpg$/.test(path)&&existsSync(join(root,'public',path.slice(1)))){res.writeHead(200,{'Content-Type':'image/jpeg','Cache-Control':'max-age=300'});return res.end(readFileSync(join(root,'public',path.slice(1))));}
   if(req.method==='GET'&&path==='/candidatas/perfiles.json'){const f=join(root,'public','candidatas','perfiles.json');res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-cache'});return res.end(existsSync(f)?readFileSync(f):'{}');}
   if(req.method==='GET'&&/^\/candidatas\/\d{2}\.jpg$/.test(path)&&existsSync(join(root,'public',path.slice(1)))){res.writeHead(200,{'Content-Type':'image/jpeg','Cache-Control':'max-age=300'});return res.end(readFileSync(join(root,'public',path.slice(1))));}
   if(req.method==='GET'&&assets[path]){res.writeHead(200,{'Content-Type':assets[path]});return res.end(readFileSync(join(root,'public',path.slice(1))));}
-  if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,...(demo&&demoClosedAt?{closes:demoClosedAt}:{}),board:boardList(),photos:candidatePhotos(),serverTime:new Date().toISOString()});
+  if(req.method==='GET'&&path==='/api/config')return send(200,{...cfg,elections:demo?demoElections:cfg.elections,...(demo&&demoClosedAt?{closes:demoClosedAt}:{}),board:boardList(),photos:candidatePhotos(),boardPhotos:boardPhotos(),serverTime:new Date().toISOString()});
   if(req.method!=='POST')return send(404,{error:'No encontrado.'});
   if(req.headers['content-type']!=='application/json')return send(415,{error:'Formato inválido.'});
   if(req.headers.origin&&!sameOrigin(req,req.headers.origin))return send(403,{error:'Origen inválido.'});
