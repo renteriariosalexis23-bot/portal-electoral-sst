@@ -11,6 +11,9 @@ set PUBLIC_HOST=elecciones.imagehealth.com.pe
 if not defined PORT set PORT=8787
 cls
 
+rem Si quedo abierto un portal anterior (version vieja), se cierra para usar la nueva.
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr /r /c:":%PORT% .*LISTENING"') do taskkill /PID %%p /F >nul 2>nul
+taskkill /FI "WINDOWTITLE eq Portal electoral - NO CERRAR*" /F >nul 2>nul
 start "Portal electoral - NO CERRAR" cmd /k node server.mjs
 timeout /t 4 /nobreak >nul
 

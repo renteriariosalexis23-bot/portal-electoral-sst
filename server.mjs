@@ -131,4 +131,5 @@ const server=http.createServer(async(req,res)=>{
   send(404,{error:'No encontrado.'});
  }catch(err){send(400,{error:err.code?'No se pudo completar la operación.':err.message});}
 });
+server.on('error',e=>{if(e.code==='EADDRINUSE'){console.error('\nYA HAY UN PORTAL ABIERTO en el puerto '+(process.env.PORT||8787)+'.\nCierra TODAS las ventanas negras del portal y vuelve a abrir INICIAR-PUBLICO.');process.exit(1);}throw e;});
 server.listen(Number(process.env.PORT||8787),'127.0.0.1',()=>console.log('Aplicación: http://127.0.0.1:'+(process.env.PORT||8787)+(tunnel?' · modo túnel Cloudflare activo':'')));
