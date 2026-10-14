@@ -783,3 +783,9 @@ label.no-blank{display:none!important}
 .board-member .cf-more{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;color:var(--brand);border-bottom:1.5px solid #e2c8de;padding-bottom:2px}
 .board-member:hover .cf-more{border-color:var(--brand)}
 .board-member:focus-visible{outline:3px solid #bb80b1;outline-offset:4px}
+/* Candidaturas con fondo propio para separarlas de "Cinco pasos" */
+.cands{background:linear-gradient(180deg,#f6ecf4 0%,#fbf6fa 100%)!important;box-shadow:0 0 0 100vmax #f8eff6;clip-path:inset(0 -100vmax);border-top:0!important;border-bottom:1px solid #ead7e6;padding-top:72px!important;padding-bottom:84px!important;position:relative}
+.cands:after{content:"";position:absolute;left:50%;bottom:-1px;transform:translateX(-50%);width:72px;height:4px;border-radius:4px 4px 0 0;background:linear-gradient(90deg,#861079,#b0489f)}
+.cands .cand-card{box-shadow:0 10px 26px #46133f10}
+.howto{padding-top:96px!important}
+@media(max-width:600px){.cands{padding-top:48px!important;padding-bottom:56px!important}.howto{padding-top:60px!important}}
