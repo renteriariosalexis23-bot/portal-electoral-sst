@@ -828,3 +828,12 @@ body:not(.voting-mode) #acceso:not(.voting-focus){background:#fff!important;box-
 .jh-mini.jh-noimg b{font-size:13px;color:#861079}
 .jh-mate.is-me .jh-mini{box-shadow:0 0 0 3px #f3c9ea}
 @media(max-width:700px){.admin-heading.jh{grid-template-columns:1fr;grid-template-areas:"main" "actions" "team";padding:24px 20px 20px;margin-top:0}.jh-main{flex-direction:column;align-items:flex-start;gap:14px}.jh-photo{width:80px;height:80px}.admin-heading.jh .actions{justify-content:flex-start}}
+/* Cabecera morada (sin la franja "Portal electoral") */
+.topline{display:none!important}
+header,header.is-scrolled{background:radial-gradient(90% 260% at 100% 0%,#b0489f 0%,rgba(176,72,159,0) 55%),linear-gradient(110deg,#4a0b45 0%,#861079 62%,#9c2a8e 100%)!important;box-shadow:0 10px 30px -16px rgba(74,11,69,.75)!important;backdrop-filter:none!important}
+header .brand img{filter:brightness(0) invert(1)}
+header nav a{color:#fff!important;opacity:.9}
+header nav a:hover{opacity:1;text-decoration:underline;text-underline-offset:6px}
+header nav button,header #admin{background:#fff!important;color:#861079!important;border:1px solid #fff!important;font-weight:700}
+header nav button:hover,header #admin:hover{background:#f6e6f2!important}
+.scroll-progress{background:linear-gradient(90deg,#f3c9ea,#fff)!important}
