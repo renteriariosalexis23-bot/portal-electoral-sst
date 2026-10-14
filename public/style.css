@@ -698,19 +698,9 @@ body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
 .hs-dots button.on{width:28px;background:#fff}
 .hero h1 em.rot{display:inline-block;transition:opacity .45s ease,transform .45s ease}
 .hero h1 em.rot.out{opacity:0;transform:translateY(12px)}
-.hero-ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.hero-cta{position:relative;overflow:hidden;display:inline-flex!important;align-items:center;gap:10px!important;padding:17px 26px!important;font-size:13px!important;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;border-radius:999px!important;transition:transform .2s,box-shadow .2s,background .2s}
-.hero-cta b{font-size:18px;letter-spacing:0}
-.hero-link.hero-cta{background:linear-gradient(115deg,#861079,#b0489f)!important;color:#fff;box-shadow:0 10px 26px #8610794d}
-.hero-cta-alt{background:#fff;color:#861079;border:1.5px solid #e2c8de}
-.hero-cta:after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,#ffffff8c,transparent);transform:skewX(-20deg);transition:left .7s ease}
-.hero-cta:hover:after{left:130%}
-.hero-cta:hover{transform:translateY(-2px);box-shadow:0 14px 30px #86107940}
 .countdown-unit{background:linear-gradient(160deg,#861079d9,#46133fd9)!important;box-shadow:0 6px 16px #2a0f2640}
 .countdown-unit b.flip{animation:cd-flip .55s ease}
 @keyframes cd-flip{0%{transform:rotateX(90deg);opacity:.2}60%{transform:rotateX(-12deg);opacity:1}100%{transform:none}}
 .countdown .cd-left{margin:10px 0 8px;font-size:13px;opacity:.9}
 .countdown .cd-vote{display:inline-block;padding:10px 18px;border-radius:999px;background:#fff;color:#861079;font-weight:700;font-size:13px;text-decoration:none}
-@media(max-width:600px){.hero-ctas{flex-direction:column;align-items:stretch}.hero-cta{justify-content:center}}
-@media(prefers-reduced-motion:reduce){.hero-photo>img.hs-slide.hs-on{animation:none!important}.hero-cta:after{display:none}}
-.hero-cta.learning-locked{opacity:1}
+@media(prefers-reduced-motion:reduce){.hero-photo>img.hs-slide.hs-on{animation:none!important}}

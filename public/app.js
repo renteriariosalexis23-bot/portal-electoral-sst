@@ -396,7 +396,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 const reviewedCommittees=new Set();
 function learningReady(){return reviewedCommittees.has('sst')&&reviewedCommittees.has('hs');}
 function refreshLearningGate(){
- document.querySelectorAll('a[href="#acceso"],a[data-learning-link]').forEach(a=>{a.dataset.learningLink='true';a.setAttribute('aria-disabled',String(!learningReady()));a.classList.toggle('learning-locked',!learningReady());if(a.classList.contains('hero-cta'))a.innerHTML='<b aria-hidden="true">🗳️</b> '+(learningReady()?'Votar ahora':'Comenzar a votar');else if(a.classList.contains('hero-link'))a.innerHTML=learningReady()?'Ir a votar ↗':'Comenzar →';});
+ document.querySelectorAll('a[href="#acceso"],a[data-learning-link]').forEach(a=>{a.dataset.learningLink='true';a.setAttribute('aria-disabled',String(!learningReady()));a.classList.toggle('learning-locked',!learningReady());if(a.classList.contains('hero-link'))a.innerHTML=learningReady()?'Ir a votar ↗':'Comenzar →';});
 }
 const unrestrictedLogin=login;
 login=function(){if(learningReady()){unrestrictedLogin();return;}$('#acceso').classList.remove('voting-focus');content.innerHTML='<h2>Primero, lee los comités</h2><p>Están justo arriba. Al final de cada uno pulsa <b>"He leído la información"</b>.</p><ul class="gate-list">'+[['sst','Seguridad y Salud en el Trabajo'],['hs','Hostigamiento Sexual']].map(([id,t])=>'<li class="'+(reviewedCommittees.has(id)?'ok':'')+'"><span aria-hidden="true">'+(reviewedCommittees.has(id)?'✓':'')+'</span>'+t+(reviewedCommittees.has(id)?' · leído':' · falta leer')+'</li>').join('')+'</ul><a class="hero-link" href="#comites">Ir a los comités ↑</a>';};
@@ -774,7 +774,7 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
   last=vals;
   if(box.classList.contains('is-open')&&cfg&&cfg.closes&&Date.now()<Date.parse(cfg.closes)&&!box.querySelector('.cd-vote')){
    const m=Math.max(0,Math.round((Date.parse(cfg.closes)-Date.now())/60000)),h=Math.floor(m/60);
-   box.insertAdjacentHTML('beforeend','<p class="cd-left">Faltan '+(h?h+' h ':'')+(m%60)+' min para el cierre</p><a class="cd-vote" href="#acceso" data-learning-link="true">🗳️ Votar ahora</a>');
+   box.insertAdjacentHTML('beforeend','<p class="cd-left">Faltan '+(h?h+' h ':'')+(m%60)+' min para el cierre</p><a class="cd-vote" href="#acceso" data-learning-link="true">Votar ahora →</a>');
   }
  });
  mo.observe(hero,{childList:true,subtree:true});
