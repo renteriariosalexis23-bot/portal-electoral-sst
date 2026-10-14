@@ -793,3 +793,6 @@ label.no-blank{display:none!important}
 .cands{background:linear-gradient(180deg,#efdcec 0%,#f5e8f2 100%)!important;box-shadow:0 0 0 100vmax #f2e2ef!important;border-bottom:0!important}
 .cands:after{height:5px;width:96px}
 .howto{background:#fff!important;box-shadow:0 0 0 100vmax #fff;clip-path:inset(0 -100vmax)}
+/* Separación entre "Cinco pasos" (blanco) y "Dos comités" (lila) */
+.committees{background:linear-gradient(180deg,#efdcec 0%,#f5e8f2 100%)!important;position:relative;border-top:0!important}
+.committees:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:96px;height:5px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#861079,#b0489f)}
