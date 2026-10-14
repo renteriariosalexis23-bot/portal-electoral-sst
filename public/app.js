@@ -165,7 +165,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled||still)return;const r=b.getBoundingClientRect(),o=document.createElement('span');o.className='ripple';o.style.setProperty('left',(e.clientX-r.left)+'px');o.style.setProperty('top',(e.clientY-r.top)+'px');b.append(o);setTimeout(()=>o.remove(),650);});
 
  /* Avatares con iniciales en la cédula */
- const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
+ const tones=['#861079','#46133f','#b0489f','#6a0f60','#a3338f','#5a1450'];
  const baseBallot=ballot;
  ballot=function(e,previous){
   baseBallot(e,previous);
@@ -278,7 +278,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
  const steps=document.querySelector('.howto-steps');if(steps)io.observe(steps);
 
  /* Iniciales para la junta */
- const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
+ const tones=['#861079','#46133f','#b0489f','#6a0f60','#a3338f','#5a1450'];
  function avatar(name,i){const w=name.trim().split(/\s+/),a=document.createElement('i');a.className='avatar';a.setAttribute('aria-hidden','true');a.textContent=(w[0][0]+(w[1]?w[1][0]:'')).toUpperCase();a.style.setProperty('--av',tones[i%tones.length]);return a;}
  document.querySelectorAll('.board-member').forEach((m,i)=>{const h=m.querySelector('h3');if(h)m.prepend(avatar(h.textContent,i+2));});
 
@@ -354,7 +354,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 /* ===== Cédula tipo papeleta y confirmación ===== */
 (()=>{
  const pics={sst:'/sst.jpg',hs:'/hs.jpg'};
- const tones=['#861079','#46133f','#b0489f','#6a3d9a','#2f7d79','#a05a2c'];
+ const tones=['#861079','#46133f','#b0489f','#6a0f60','#a3338f','#5a1450'];
  const initials=n=>{const w=n.trim().split(/\s+/);return (w[0][0]+(w[1]?w[1][0]:'')).toUpperCase();};
  const baseBallot2=ballot;
  ballot=function(e,previous){
