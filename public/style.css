@@ -671,3 +671,9 @@ body.voting-mode nav{display:none!important}
 .js-me{font-size:13px;margin:0 0 10px;color:#302732}
 .js-refresh{font-size:13px;padding:8px 14px;margin-bottom:12px}
 .js-warn{font-size:13px;color:#6b5320;background:#fbf5e6;border-radius:8px;padding:8px 12px;margin:0 0 6px}
+/* Pie de página con el color de la empresa */
+footer{background:linear-gradient(115deg,#46133f 0%,#6a0f60 55%,#861079 100%)!important;color:#fff}
+footer img{filter:brightness(0) invert(1)}
+footer>div{color:#fff!important;font-weight:600}
+footer span,footer small{color:#efd9ec!important}
+footer a{color:#fff!important}
