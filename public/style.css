@@ -752,3 +752,28 @@ body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
 .dash-grid .dash-body .actions button{padding:12px 18px}
 label.no-blank{display:none!important}
 .avatar.has-photo{background-size:cover!important;background-position:center 30%!important;background-repeat:no-repeat!important;color:transparent!important;border:3px solid #fff}
+/* ===== Ficha de candidatura ===== */
+.cand-card{cursor:pointer}
+.cand-card .cf-more{display:inline-block;margin-top:12px;font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.02em;border-bottom:1.5px solid #e2c8de;padding-bottom:2px;transition:border-color .2s}
+.cand-card:hover .cf-more{border-color:var(--brand)}
+.cand-card:focus-visible{outline:3px solid #bb80b1;outline-offset:3px}
+.cf-overlay{position:fixed;inset:0;z-index:1000;background:#2a0f26b3;display:grid;place-items:center;padding:16px;animation:cf-fade .22s ease both}
+.cf-overlay.out{animation:cf-fade .22s ease reverse both}
+@keyframes cf-fade{from{opacity:0}to{opacity:1}}
+.cf-card{position:relative;width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;display:grid;grid-template-columns:300px 1fr;box-shadow:0 30px 70px #00000055;animation:cf-pop .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cf-pop{from{transform:translateY(18px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.cf-photo{position:relative;min-height:340px;background:linear-gradient(160deg,#46133f,#861079);display:grid;place-items:center}
+.cf-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%}
+.cf-photo span{font:800 64px var(--sans,Arial);color:#ffffffcc}
+.cf-photo img+span{display:none}
+.cf-body{padding:30px 30px 28px}
+.cf-body small{font-size:11px;letter-spacing:.16em;color:var(--brand);font-weight:700}
+.cf-body h3{margin:8px 0 10px;font-size:26px;line-height:1.15;letter-spacing:-.02em}
+.cf-meta{margin:0 0 14px;color:#665a68;font-size:14px;line-height:1.6}
+.cf-body blockquote{margin:0 0 14px;padding:12px 16px;border-left:3px solid var(--brand);background:#fbf3fa;border-radius:0 10px 10px 0;font-style:italic;color:#46133f}
+.cf-body h4{margin:6px 0 6px;font-size:14px}
+.cf-body ul{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.6;color:#3d3240}
+.cf-com{margin:8px 0 0;font-size:12px;color:#776a78;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cf-com span{background:#f3e8f1;color:#6a0f60;border-radius:999px;padding:4px 10px;font-weight:700}
+.cf-close{position:absolute;top:12px;right:12px;z-index:2;width:38px;height:38px;border-radius:50%;padding:0;font-size:22px;line-height:1;background:#ffffffe6;border:1px solid #e2d6e0}
+@media(max-width:640px){.cf-card{grid-template-columns:1fr}.cf-photo{min-height:300px}.cf-body{padding:22px}}

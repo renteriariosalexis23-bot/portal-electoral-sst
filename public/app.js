@@ -827,3 +827,25 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  new MutationObserver(()=>paint()).observe(document.body,{childList:true,subtree:true});
  setTimeout(paint,800);
 })();
+
+/* ===== Ficha de cada candidatura: clic en "Conoce a quienes postulan" ===== */
+(()=>{
+ let perfiles={};
+ fetch('/candidatas/perfiles.json').then(r=>r.ok?r.json():{}).then(j=>{perfiles=j||{};}).catch(()=>{});
+ const people=()=>{const m=new Map();(cfg&&cfg.elections||[]).forEach(e=>e.candidates.forEach(c=>{const n=String(c.number).padStart(2,'0');const p=m.get(n)||{...c,n,committees:[]};p.committees.push(e.title);m.set(n,p);}));return m;};
+ function open(n){
+  const c=people().get(n);if(!c)return;const pf=perfiles[n]||{};
+  const photo=cfg.photos&&cfg.photos.includes(n);
+  const ov=document.createElement('div');ov.className='cf-overlay';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','Ficha de '+c.name);
+  ov.innerHTML='<div class="cf-card"><button class="cf-close" aria-label="Cerrar">×</button><div class="cf-photo'+(photo?'':' cf-noimg')+'"><span>'+esc(c.name.split(/\s+/).map(w=>w[0]).slice(0,2).join(''))+'</span></div><div class="cf-body"><small>CANDIDATURA '+n+'</small><h3>'+esc(c.name)+'</h3><p class="cf-meta"><b>'+esc(c.role||'')+'</b><br>'+esc(c.site||'')+'</p>'+(pf.lema?'<blockquote>“'+esc(pf.lema)+'”</blockquote>':'')+((pf.propuestas||[]).filter(Boolean).length?'<h4>Propuestas</h4><ul>'+pf.propuestas.filter(Boolean).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')+'<p class="cf-com">Postula en: '+c.committees.map(t=>'<span>'+esc(t)+'</span>').join('')+'</p></div></div>';
+  const ph=ov.querySelector('.cf-photo');if(photo){const img=new Image();img.alt=c.name;img.src=(typeof IMG!=='undefined'&&IMG['cand'+n])||('/candidatas/'+n+'.jpg');ph.prepend(img);}
+  const close=()=>{ov.classList.add('out');setTimeout(()=>ov.remove(),220);document.removeEventListener('keydown',key);last&&last.focus();};
+  const key=e=>{if(e.key==='Escape')close();};const last=document.activeElement;
+  ov.onclick=e=>{if(e.target===ov||e.target.closest('.cf-close'))close();};document.addEventListener('keydown',key);
+  document.body.append(ov);ov.querySelector('.cf-close').focus();
+ }
+ const numOf=card=>{const m=(card.querySelector('small')||{}).textContent;const r=/(\d{2})/.exec(m||'');return r&&r[1];};
+ document.addEventListener('click',e=>{const card=e.target.closest('.cand-card');if(!card)return;const n=numOf(card);if(n)open(n);});
+ document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('cand-card')){e.preventDefault();const n=numOf(e.target);if(n)open(n);}});
+ new MutationObserver(()=>document.querySelectorAll('.cand-card:not([data-cf])').forEach(c=>{c.dataset.cf='1';if(c.getAttribute('aria-hidden')!=='true'){c.tabIndex=0;c.setAttribute('role','button');c.setAttribute('aria-label','Ver ficha de '+((c.querySelector('strong')||{}).textContent||'candidatura'));}if(!c.querySelector('.cf-more'))c.insertAdjacentHTML('beforeend','<span class="cf-more">Ver perfil →</span>');})).observe(document.body,{childList:true,subtree:true});
+})();

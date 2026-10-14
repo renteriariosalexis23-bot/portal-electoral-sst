@@ -1,0 +1,8 @@
+{
+  "_ayuda": "Opcional. Por número de candidatura: \"lema\" (una frase) y \"propuestas\" (lista corta). Si no hay datos, la ficha muestra solo foto, cargo y sede.",
+  "01": {"lema": "", "propuestas": []},
+  "02": {"lema": "", "propuestas": []},
+  "03": {"lema": "", "propuestas": []},
+  "04": {"lema": "", "propuestas": []},
+  "05": {"lema": "", "propuestas": []}
+}
