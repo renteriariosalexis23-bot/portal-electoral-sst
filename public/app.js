@@ -780,3 +780,13 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  });
  mo.observe(hero,{childList:true,subtree:true});
 })();
+
+/* ===== Votación con movimiento: transiciones entre pantallas, tarjetas y selección ===== */
+(()=>{
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches||!content)return;
+ /* Cada pantalla nueva (elecciones, cédula, revisión, constancia) entra con un deslizamiento suave y escalonado. */
+ const ringIn=()=>content.querySelectorAll('.dash-summary .v,.ring-value').forEach(r=>{const t=r.getAttribute('stroke-dasharray');if(!t||r.dataset.anim===t)return;r.dataset.anim=t;r.setAttribute('stroke-dasharray','0 100');requestAnimationFrame(()=>requestAnimationFrame(()=>r.setAttribute('stroke-dasharray',t)));});
+ new MutationObserver(()=>{content.classList.remove('vt');void content.offsetWidth;content.classList.add('vt');ringIn();}).observe(content,{childList:true});
+ /* Onda al tocar una candidatura. */
+ content.addEventListener('pointerdown',e=>{const c=e.target.closest('.candidate-options .candidate');if(!c)return;const r=c.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,s=document.createElement('span');s.className='ripple';s.style.setProperty('width',d+'px');s.style.setProperty('height',d+'px');s.style.setProperty('left',(e.clientX-r.left-d/2)+'px');s.style.setProperty('top',(e.clientY-r.top-d/2)+'px');c.append(s);setTimeout(()=>s.remove(),700);});
+})();

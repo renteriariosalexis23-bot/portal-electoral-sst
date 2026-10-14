@@ -704,3 +704,30 @@ body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
 .countdown .cd-left{margin:10px 0 8px;font-size:13px;opacity:.9}
 .countdown .cd-vote{display:inline-block;padding:10px 18px;border-radius:999px;background:#fff;color:#861079;font-weight:700;font-size:13px;text-decoration:none}
 @media(prefers-reduced-motion:reduce){.hero-photo>img.hs-slide.hs-on{animation:none!important}}
+/* ===== Votación con movimiento ===== */
+@media (prefers-reduced-motion:no-preference){
+#content.vt>*{animation:vt-in .55s cubic-bezier(.2,.7,.2,1) both}
+#content.vt>*:nth-child(2){animation-delay:.06s}#content.vt>*:nth-child(3){animation-delay:.12s}#content.vt>*:nth-child(4){animation-delay:.18s}#content.vt>*:nth-child(5){animation-delay:.24s}#content.vt>*:nth-child(6){animation-delay:.3s}#content.vt>*:nth-child(n+7){animation-delay:.36s}
+@keyframes vt-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.dash-card{transition:transform .4s cubic-bezier(.2,.7,.2,1),box-shadow .4s,border-color .4s!important}
+.dash-card:hover{transform:translateY(-5px)!important;box-shadow:0 20px 44px #46133f1f!important;border-color:#e2c8de!important}
+.dash-photo{overflow:hidden}
+.dash-photo img{transition:transform 1.4s cubic-bezier(.2,.7,.2,1)!important}
+.dash-card:hover .dash-photo img{transform:scale(1.08)}
+.chip.pending{animation:chip-glow 2.6s ease-in-out infinite}
+@keyframes chip-glow{50%{box-shadow:0 0 0 6px #f3d79a33}}
+.dash-card [data-election]:not(:disabled):hover{box-shadow:0 10px 24px #86107940;transform:translateY(-2px)}
+.candidate-options .candidate{position:relative;overflow:hidden;animation:vt-in .5s cubic-bezier(.2,.7,.2,1) both;transition:transform .2s,box-shadow .25s,border-color .25s,background .25s!important}
+.candidate-options .candidate:nth-child(2){animation-delay:.05s}.candidate-options .candidate:nth-child(3){animation-delay:.1s}.candidate-options .candidate:nth-child(4){animation-delay:.15s}.candidate-options .candidate:nth-child(5){animation-delay:.2s}.candidate-options .candidate:nth-child(6){animation-delay:.25s}.candidate-options .candidate:nth-child(n+7){animation-delay:.3s}
+.candidate-options .candidate:hover{transform:translateY(-2px)!important;box-shadow:0 10px 24px #46133f14}
+.candidate-options .candidate:active{transform:scale(.985)!important}
+.candidate-options .candidate:has(input:checked) .avatar{animation:bump .45s cubic-bezier(.3,1.6,.5,1)}
+.candidate-options .candidate:has(input:checked) .cand-check{animation:pop .4s cubic-bezier(.3,1.7,.5,1)}
+@keyframes bump{50%{transform:scale(1.14)}}
+@keyframes pop{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
+.ripple{position:absolute;border-radius:50%;background:#86107924;transform:scale(0);animation:ripple .65s ease-out forwards;pointer-events:none;z-index:0}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+.success-seal{animation:seal-in .8s cubic-bezier(.3,1.5,.5,1) both!important}
+@keyframes seal-in{from{transform:scale(.4) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+#selection-progress{transition:all .4s}
+}
