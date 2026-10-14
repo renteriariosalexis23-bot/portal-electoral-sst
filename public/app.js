@@ -396,7 +396,7 @@ document.querySelectorAll('[data-info]').forEach(button=>button.onclick=()=>{
 const reviewedCommittees=new Set();
 function learningReady(){return reviewedCommittees.has('sst')&&reviewedCommittees.has('hs');}
 function refreshLearningGate(){
- document.querySelectorAll('a[href="#acceso"],a[data-learning-link]').forEach(a=>{a.dataset.learningLink='true';a.setAttribute('aria-disabled',String(!learningReady()));a.classList.toggle('learning-locked',!learningReady());if(a.classList.contains('hero-link'))a.innerHTML=learningReady()?'Ir a votar ↗':'Comenzar →';});
+ document.querySelectorAll('a[href="#acceso"],a[data-learning-link]').forEach(a=>{a.dataset.learningLink='true';a.setAttribute('aria-disabled',String(!learningReady()));a.classList.toggle('learning-locked',!learningReady());if(a.classList.contains('hero-cta'))a.innerHTML='<b aria-hidden="true">🗳️</b> '+(learningReady()?'Votar ahora':'Comenzar a votar');else if(a.classList.contains('hero-link'))a.innerHTML=learningReady()?'Ir a votar ↗':'Comenzar →';});
 }
 const unrestrictedLogin=login;
 login=function(){if(learningReady()){unrestrictedLogin();return;}$('#acceso').classList.remove('voting-focus');content.innerHTML='<h2>Primero, lee los comités</h2><p>Están justo arriba. Al final de cada uno pulsa <b>"He leído la información"</b>.</p><ul class="gate-list">'+[['sst','Seguridad y Salud en el Trabajo'],['hs','Hostigamiento Sexual']].map(([id,t])=>'<li class="'+(reviewedCommittees.has(id)?'ok':'')+'"><span aria-hidden="true">'+(reviewedCommittees.has(id)?'✓':'')+'</span>'+t+(reviewedCommittees.has(id)?' · leído':' · falta leer')+'</li>').join('')+'</ul><a class="hero-link" href="#comites">Ir a los comités ↑</a>';};
@@ -738,4 +738,44 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
   head.insertAdjacentHTML('afterend','<div class="demo-close"><div><b>Modo prueba · '+(report.closed?'votación CERRADA (simulada)':'votación abierta')+'</b><span>'+(report.closed?'Así se verá después de las 4:00 p. m.: nadie puede votar y la junta abre el escrutinio. Pulsa “Reabrir” para seguir probando.':'Simula las 4:00 p. m. para ver cómo se cierra la votación. En la elección real se cierra sola.')+'</span></div><button id="demo-close-btn" class="'+(report.closed?'':'primary')+'">'+(report.closed?'Reabrir votación (prueba)':'Simular cierre de votación')+'</button></div>');
   $('#demo-close-btn').onclick=async e=>{e.currentTarget.disabled=true;try{await api('demo-cierre',{key,closed:!report.closed});const c=await (await fetch('/api/config')).json();cfg.closes=c.closes;renderAdmin(await api('admin',{key}),key);notice(report.closed?'Votación reabierta (prueba).':'Votación cerrada (simulación). Ahora entra como trabajador para ver lo que verán ellos.');}catch(err){notice(err.message);e.currentTarget.disabled=false;}};
  };
+})();
+
+/* ===== Portada dinámica: fotos que cambian, frase que rota y cuenta regresiva animada ===== */
+(()=>{
+ const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const fig=document.querySelector('.hero-photo');
+ /* 1. Fotos que cambian solas con acercamiento lento */
+ if(fig&&fig.querySelector('img')){
+  const first=fig.querySelector('img');first.classList.add('hs-slide');
+  const slides=[first,...[['/sst.jpg','Comité de Seguridad y Salud en el Trabajo'],['/hs.jpg','Comité de Intervención frente al Hostigamiento Sexual']].map(([src,alt])=>{const im=new Image();im.className='hs-slide';im.alt=alt;im.decoding='async';im.src=src;fig.append(im);return im;})];
+  const dots=document.createElement('div');dots.className='hs-dots';
+  slides.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Ver foto '+(i+1)+' de '+slides.length);b.onclick=()=>{go(i);restart();};dots.append(b);});
+  fig.append(dots);
+  let cur=0,timer=null;
+  function go(n){cur=(n+slides.length)%slides.length;slides.forEach((s,i)=>s.classList.toggle('hs-on',i===cur));[...dots.children].forEach((d,i)=>{d.classList.toggle('on',i===cur);d.setAttribute('aria-pressed',String(i===cur));});}
+  function restart(){clearInterval(timer);if(!still)timer=setInterval(()=>go(cur+1),6000);}
+  go(0);restart();
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInterval(timer);else restart();});
+ }
+ /* 2. Frase que rota debajo del título */
+ const em=document.querySelector('.hero h1 em');
+ if(em&&!still){
+  const phrases=['Lo elegimos juntos.','Tu voz cuenta.','Tu voto es secreto.','Participa este 2/11.'];let k=0;
+  em.classList.add('rot');
+  setInterval(()=>{em.classList.add('out');setTimeout(()=>{k=(k+1)%phrases.length;em.textContent=phrases[k];em.classList.remove('out');},450);},3800);
+ }
+ /* 4. Cuenta regresiva: los números que cambian giran; con la votación abierta, tiempo para el cierre y botón */
+ const hero=document.querySelector('.hero');if(!hero)return;
+ let last=[];
+ const mo=new MutationObserver(()=>{
+  const box=hero.querySelector('.countdown');if(!box)return;
+  const bs=[...box.querySelectorAll('.countdown-unit b')],vals=bs.map(b=>b.textContent);
+  if(!still)bs.forEach((b,i)=>{if(last.length&&last[i]!==vals[i])b.classList.add('flip');});
+  last=vals;
+  if(box.classList.contains('is-open')&&cfg&&cfg.closes&&Date.now()<Date.parse(cfg.closes)&&!box.querySelector('.cd-vote')){
+   const m=Math.max(0,Math.round((Date.parse(cfg.closes)-Date.now())/60000)),h=Math.floor(m/60);
+   box.insertAdjacentHTML('beforeend','<p class="cd-left">Faltan '+(h?h+' h ':'')+(m%60)+' min para el cierre</p><a class="cd-vote" href="#acceso" data-learning-link="true">🗳️ Votar ahora</a>');
+  }
+ });
+ mo.observe(hero,{childList:true,subtree:true});
 })();
