@@ -812,3 +812,18 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
   const opts=content.querySelector('.candidate-options');if(opts)opts.setAttribute('aria-label','Candidaturas');
  };
 })();
+
+/* ===== Fotos de las candidaturas (public/candidatas/NN.jpg) en lugar de las iniciales ===== */
+(()=>{
+ const url=n=>'/candidatas/'+n+'.jpg';
+ function paint(){
+  if(!cfg||!cfg.photos||!cfg.photos.length)return;
+  /* Todas las candidaturas (con o sin foto): se usa la tarjeta más cercana que nombra a UNA sola persona. */
+  const people=[];(cfg.elections||[]).forEach(e=>e.candidates.forEach(c=>{if(!people.some(p=>p.name===c.name))people.push({name:c.name,n:String(c.number).padStart(2,'0')});}));
+  document.querySelectorAll('.avatar:not(.has-photo):not(.blank-avatar):not(.no-photo)').forEach(av=>{
+   let box=av.parentElement;for(let k=0;k<4&&box;k++,box=box.parentElement){if(box.matches('.board-member,.board-grid,.esc-card'))return;const t=box.textContent||'';const hits=people.filter(p=>t.includes(p.name));if(hits.length>1)return;if(hits.length===1){const h=hits[0];if(cfg.photos.includes(h.n)){av.classList.add('has-photo');av.style.setProperty('background-image','url("'+url(h.n)+'")','important');av.setAttribute('data-initials',av.textContent);av.textContent='';}else av.classList.add('no-photo');return;}}
+  });
+ }
+ new MutationObserver(()=>paint()).observe(document.body,{childList:true,subtree:true});
+ setTimeout(paint,800);
+})();

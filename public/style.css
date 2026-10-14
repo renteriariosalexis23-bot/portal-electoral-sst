@@ -751,3 +751,4 @@ body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
 .dash-grid .dash-body .actions{width:100%}
 .dash-grid .dash-body .actions button{padding:12px 18px}
 label.no-blank{display:none!important}
+.avatar.has-photo{background-size:cover!important;background-position:center 30%!important;background-repeat:no-repeat!important;color:transparent!important;border:3px solid #fff}

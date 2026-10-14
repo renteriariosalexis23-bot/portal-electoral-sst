@@ -170,7 +170,9 @@ test('junta: clave por integrante, registro de ingresos y escrutinio con dos int
   await new Promise((ok,ko)=>{child.stdout.on('data',d=>{if(d.toString().includes('Aplicación:'))ok();});child.on('exit',c=>ko(Error('exit '+c)));});
   const api=async(path,body,token='')=>{const r=await fetch('http://127.0.0.1:18791/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
   const config=await (await fetch('http://127.0.0.1:18791/api/config')).json();
-  assert.deepEqual(config.board.map(m=>m.role),['Presidente','Secretaria','Vocal 1','Vocal 2']);assert.equal(JSON.stringify(config.board).includes('key'),false);
+  assert.deepEqual(config.board.map(m=>m.role),['Presidente','Secretaria','Vocal 1','Vocal 2']);
+  assert.ok(Array.isArray(config.photos));for(const n of config.photos){const r=await fetch('http://127.0.0.1:18791/candidatas/'+n+'.jpg');assert.equal(r.status,200);assert.equal(r.headers.get('content-type'),'image/jpeg');}
+  assert.notEqual((await fetch('http://127.0.0.1:18791/candidatas/..%2Fconfig.json')).status,200);assert.equal(JSON.stringify(config.board).includes('key'),false);
   const pres={member:'presidente',key:'junta-demo'},sec={member:'secretaria',key:'JUNTA-DEMO'};
   assert.equal((await api('admin',{key:{member:'presidente',key:'OTRA'}})).status,401);
   const report=await api('admin',{key:pres});assert.equal(report.status,200);assert.equal(report.data.member.role,'Presidente');assert.equal(report.data.elections[0].results,null);assert.equal(report.data.escrutinio,null);
