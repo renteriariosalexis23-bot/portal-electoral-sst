@@ -796,3 +796,8 @@ label.no-blank{display:none!important}
 /* Separación entre "Cinco pasos" (blanco) y "Dos comités" (lila) */
 .committees{background:linear-gradient(180deg,#efdcec 0%,#f5e8f2 100%)!important;position:relative;border-top:0!important}
 .committees:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:96px;height:5px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#861079,#b0489f)}
+/* Separación entre "Vota aquí" (blanco) y "Nuestra junta electoral" (lila) */
+body:not(.voting-mode) #acceso:not(.voting-focus){background:#fff!important;box-shadow:0 0 0 100vmax #fff!important}
+#acceso .access-panel{box-shadow:0 18px 50px -20px rgba(134,16,121,.28)}
+.electoral-board{background:linear-gradient(180deg,#efdcec 0%,#f5e8f2 100%)!important;position:relative}
+.electoral-board:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:96px;height:5px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#861079,#b0489f)}
