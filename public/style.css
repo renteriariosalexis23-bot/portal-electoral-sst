@@ -677,3 +677,14 @@ footer img{filter:brightness(0) invert(1)}
 footer>div{color:#fff!important;font-weight:600}
 footer span,footer small{color:#efd9ec!important}
 footer a{color:#fff!important}
+/* Color de la empresa: franja superior, franja de la fecha y sección "Vota aquí" */
+.topline{background:linear-gradient(115deg,#46133f 0%,#6a0f60 55%,#861079 100%)!important}
+.schedule{background:linear-gradient(115deg,#46133f 0%,#6a0f60 55%,#861079 100%)!important;color:#fff;border-bottom:0!important}
+.schedule .date{border-right-color:#ffffff38!important}
+.schedule .date>strong{color:#fff!important}
+.schedule .date>span,.schedule .date b{color:#efd9ec!important}
+.schedule small{color:#e6c9e1!important}
+.schedule>div:not(.date)>strong{color:#fff!important}
+.schedule>div:not(.date)>span{color:#efd9ec!important}
+body:not(.voting-mode) #acceso:not(.voting-focus){background:#f6edf5;box-shadow:0 0 0 100vmax #f6edf5;clip-path:inset(0 -100vmax)}
+body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
