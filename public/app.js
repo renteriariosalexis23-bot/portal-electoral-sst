@@ -790,3 +790,14 @@ function openDoc(html,filename){const url=URL.createObjectURL(new Blob([html],{t
  /* Onda al tocar una candidatura. */
  content.addEventListener('pointerdown',e=>{const c=e.target.closest('.candidate-options .candidate');if(!c)return;const r=c.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,s=document.createElement('span');s.className='ripple';s.style.setProperty('width',d+'px');s.style.setProperty('height',d+'px');s.style.setProperty('left',(e.clientX-r.left-d/2)+'px');s.style.setProperty('top',(e.clientY-r.top-d/2)+'px');c.append(s);setTimeout(()=>s.remove(),700);});
 })();
+
+/* ===== "Tus elecciones": tarjetas de foto completa con panel translúcido ===== */
+(()=>{
+ const baseDash5=dashboard;
+ dashboard=async function(){
+  await baseDash5();
+  const cards=[...content.querySelectorAll('.dash-card')];if(cards.length<1)return;
+  const grid=document.createElement('div');grid.className='dash-grid';cards[0].before(grid);cards.forEach(c=>grid.append(c));
+  cards.forEach((c,i)=>{const s=c.querySelector('.dash-photo span');if(s)s.textContent='COMITÉ '+String(i+1).padStart(2,'0');});
+ };
+})();

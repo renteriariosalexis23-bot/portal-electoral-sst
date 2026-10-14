@@ -731,3 +731,22 @@ body:not(.voting-mode) #acceso:not(.voting-focus) .access-info h2{color:#861079}
 @keyframes seal-in{from{transform:scale(.4) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
 #selection-progress{transition:all .4s}
 }
+/* ===== Tus elecciones: fotos completas ===== */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:20px 0 18px}
+.dash-grid .dash-card{position:relative;display:block!important;min-height:450px;margin:0!important;border:0!important;border-radius:26px!important;overflow:hidden;background:#33232e;box-shadow:0 20px 44px #46133f26}
+.dash-grid .dash-photo{position:absolute;inset:0;min-height:0}
+.dash-grid .dash-photo:after{background:linear-gradient(180deg,#2a0f2610 30%,#2a0f26a8)}
+.dash-grid .dash-photo span{top:18px;left:18px;bottom:auto;padding:6px 12px;border-radius:999px;background:#ffffff26;border:1px solid #ffffff59;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);letter-spacing:.2em;font-size:11px}
+.dash-grid .dash-body{position:absolute;z-index:2;left:14px;right:14px;bottom:14px;padding:18px 20px 20px;border-radius:20px;background:#ffffffde;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px #2a0f2626}
+.dash-grid .dash-body h3{font-size:20px!important;margin:10px 0 6px!important}
+.dash-grid .dash-body .chip{order:-1}
+.dash-grid .dash-body .blurb{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px!important}
+.dash-grid .dash-body .actions{display:flex;flex-direction:column;gap:8px}
+.dash-grid .dash-body .actions button{width:100%;justify-content:center;padding:14px 18px}
+@media(max-width:760px){.dash-grid{grid-template-columns:1fr}.dash-grid .dash-card{min-height:420px}}
+.dash-grid .dash-card{min-height:480px}
+.dash-grid .dash-body{display:flex;flex-direction:column;align-items:flex-start;padding:16px 18px 18px}
+.dash-grid .dash-body h3{margin:8px 0 4px!important;font-size:19px!important}
+.dash-grid .dash-body .blurb{-webkit-line-clamp:2;font-size:12.5px!important;margin-bottom:12px!important}
+.dash-grid .dash-body .actions{width:100%}
+.dash-grid .dash-body .actions button{padding:12px 18px}
