@@ -39,8 +39,10 @@ db.prepare('INSERT INTO audit(event,time) VALUES(?,?)').run('SERVER_START',new D
 const sessions=new Map(),attempts=new Map();
 /* Publicación con Cloudflare Tunnel: todo llega desde 127.0.0.1, así que la IP real viene en CF-Connecting-IP. */
 const tunnel=process.env.TRUST_CLOUDFLARE==='1';
-const clientIp=req=>tunnel&&req.headers['cf-connecting-ip']?String(req.headers['cf-connecting-ip']):req.socket.remoteAddress;
-const sameOrigin=(req,origin)=>{const h=new URL(origin).host;return h===req.headers.host||(tunnel&&(h===req.headers['x-forwarded-host']||/\.trycloudflare\.com$/.test(h)||h===process.env.PUBLIC_HOST));};
+/* TRUST_PROXY=1: detrás del proxy de un hosting (nginx, Apache, Passenger), la IP real viene en X-Forwarded-For. */
+const proxied=process.env.TRUST_PROXY==='1';
+const clientIp=req=>{if(tunnel&&req.headers['cf-connecting-ip'])return String(req.headers['cf-connecting-ip']);if(proxied&&req.headers['x-forwarded-for']){const l=String(req.headers['x-forwarded-for']).split(',').map(x=>x.trim()).filter(Boolean);if(l.length)return l[l.length-1];}return req.socket.remoteAddress;};
+const sameOrigin=(req,origin)=>{const h=new URL(origin).host;return h===req.headers.host||((tunnel||proxied)&&h===process.env.PUBLIC_HOST)||(proxied&&h===req.headers['x-forwarded-host'])||(tunnel&&(h===req.headers['x-forwarded-host']||/\.trycloudflare\.com$/.test(h)||h===process.env.PUBLIC_HOST));};
 /* Respaldo de la base cada 15 minutos (copia consistente con VACUUM INTO). */
 const backupDir=join(root,'data','respaldos');mkdirSync(backupDir,{recursive:true});
 function backup(){try{const f=join(backupDir,(demo?'demo-':'eleccion-')+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'')+'.sqlite');if(!existsSync(f)){db.exec("VACUUM INTO '"+f.replace(/'/g,"''")+"'");console.log('Respaldo guardado: '+f);}}catch(e){console.error('No se pudo guardar el respaldo: '+e.message);}}
@@ -132,4 +134,4 @@ const server=http.createServer(async(req,res)=>{
  }catch(err){send(400,{error:err.code?'No se pudo completar la operación.':err.message});}
 });
 server.on('error',e=>{if(e.code==='EADDRINUSE'){console.error('\nYA HAY UN PORTAL ABIERTO en el puerto '+(process.env.PORT||8787)+'.\nCierra TODAS las ventanas negras del portal y vuelve a abrir INICIAR-PUBLICO.');process.exit(1);}throw e;});
-server.listen(Number(process.env.PORT||8787),'127.0.0.1',()=>console.log('Aplicación: http://127.0.0.1:'+(process.env.PORT||8787)+(tunnel?' · modo túnel Cloudflare activo':'')));
+server.listen(Number(process.env.PORT||8787),process.env.HOST||'127.0.0.1',()=>console.log('Aplicación: http://127.0.0.1:'+(process.env.PORT||8787)+(tunnel?' · modo túnel Cloudflare activo':'')));
