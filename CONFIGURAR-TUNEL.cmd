@@ -1,12 +1,12 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title Configurar tunel elecciones.imagehealth.com.pe (una sola vez)
-set HOST=elecciones.imagehealth.com.pe
+title Configurar tunel sst.laboratorioimage.com (una sola vez)
+set HOST=sst.laboratorioimage.com
 
 where cloudflared >nul 2>nul || (echo Falta instalar cloudflared. Ejecuta: winget install --id Cloudflare.cloudflared & pause & exit /b 1)
 
-echo Paso 1 de 3: se abrira el navegador. Inicia sesion en Cloudflare y elige imagehealth.com.pe
+echo Paso 1 de 3: se abrira el navegador. Inicia sesion en Cloudflare y elige laboratorioimage.com
 pause
 cloudflared tunnel login || (echo No se pudo autorizar. & pause & exit /b 1)
 

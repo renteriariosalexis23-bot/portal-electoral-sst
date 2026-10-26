@@ -7,7 +7,7 @@ where node >nul 2>nul || (echo Falta instalar Node.js 24 o superior: https://nod
 where cloudflared >nul 2>nul || (echo Falta instalar cloudflared. Abre una ventana de comandos y ejecuta: & echo     winget install --id Cloudflare.cloudflared & echo Luego cierra esta ventana y vuelve a abrir INICIAR-PUBLICO.cmd & pause & exit /b 1)
 
 set TRUST_CLOUDFLARE=1
-set PUBLIC_HOST=elecciones.imagehealth.com.pe
+set PUBLIC_HOST=sst.laboratorioimage.com
 if not defined PORT set PORT=8787
 cls
 
@@ -31,7 +31,7 @@ exit /b
 
 :fija
 echo ================================================================
-echo  Portal publicado en:  https://elecciones.imagehealth.com.pe
+echo  Portal publicado en:  https://sst.laboratorioimage.com
 echo  NO cierres ninguna de las dos ventanas hasta que termine la
 echo  votacion. Si se reinicia, vuelve a abrir este archivo.
 echo ================================================================

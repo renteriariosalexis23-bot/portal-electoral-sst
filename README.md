@@ -46,7 +46,7 @@ El portal corre en una PC de la empresa y Cloudflare le da una dirección públi
 
 **Respaldos:** el servidor guarda una copia de la base al iniciar y cada 15 minutos en data/respaldos/. Al terminar, copia data/election.sqlite y data/respaldos/ a una USB bajo custodia de la junta.
 
-**Con el dominio de la empresa:** sigue GUIA-DOMINIO.md (para quien administra imagehealth.com.pe) y ejecuta una vez CONFIGURAR-TUNEL.cmd. Desde entonces INICIAR-PUBLICO.cmd publica en https://elecciones.imagehealth.com.pe. Antes de cargar el padrón oficial agrega `"portalUrl": "https://elecciones.imagehealth.com.pe"` en config.json para que aparezca en las tarjetas.
+**Con el dominio de la empresa:** sigue GUIA-DOMINIO.md (para quien administra laboratorioimage.com) y ejecuta una vez CONFIGURAR-TUNEL.cmd. Desde entonces INICIAR-PUBLICO.cmd publica en https://sst.laboratorioimage.com. Antes de cargar el padrón oficial agrega `"portalUrl": "https://sst.laboratorioimage.com"` en config.json para que aparezca en las tarjetas.
 
 **Limitaciones del túnel gratuito sin dominio:** Cloudflare lo ofrece para pruebas, sin garantía de disponibilidad, y la dirección es aleatoria y cambia en cada reinicio. Para una dirección fija y un servicio más estable se necesita un dominio propio (desde unos US$10 al año) con un túnel con nombre, también gratuito.
 
