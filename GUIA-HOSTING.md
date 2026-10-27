@@ -77,6 +77,21 @@ Después reinicia el proceso.
 2. Después **bórralos del servidor**.
 3. Nadie fuera de la junta debe tenerlos.
 
+## Si llega una versión corregida (actualizar)
+1. Descomprime el ZIP nuevo en una carpeta aparte.
+2. Copia sus archivos sobre la carpeta del portal, **sin tocar** estos:
+   - las carpetas `data/` y `credenciales/`;
+   - los archivos `config.json`, `junta.json` y `padron.xlsx`.
+
+   Ejemplo:
+
+   ```
+   rsync -a --exclude data --exclude credenciales --exclude config.json --exclude junta.json --exclude padron.xlsx nueva/ /home/usuario/portal-electoral/
+   ```
+
+3. Reinicia el proceso, por ejemplo `pm2 restart elecciones`. Los votos no se pierden.
+4. Abre la página y presiona Ctrl + F5.
+
 ## Reglas durante la elección
 - **No modificar `config.json`** después de pasar a oficial. Si cambia, el portal se niega a arrancar, como protección.
 - **No borrar la carpeta `data/`.** Ahí están los votos; las copias de seguridad se guardan en `data/respaldos/`.
