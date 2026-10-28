@@ -10,7 +10,7 @@ echo   PASAR A MODO OFICIAL (eleccion del 2 de noviembre)
 echo ================================================================
 echo  Esto hace lo siguiente:
 echo   - BORRA todo lo de prueba: votos, firmas, actas y codigos de prueba.
-echo   - Activa la configuracion oficial (6 candidatas, SST y HS).
+echo   - Activa la configuracion oficial (5 candidatas, SST y HS).
 echo   - Carga padron.xlsx y crea los CODIGOS DEFINITIVOS.
 echo   - Crea las CLAVES PERSONALES de la junta (ya no sirve JUNTA-DEMO).
 echo.
